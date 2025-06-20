@@ -8,7 +8,10 @@ from pyvisa.resources import MessageBasedResource
 class VRG:
     """
     Class that implements the driver for the Oregon Physics Variable Frequency RF Generator (VRG).
-    The driver implements the following 20 commands:
+    The driver implements the following 23 commands:
+
+    ATTN COMMAND:
+    * !: ping the VRG (returns `"WAZOO!"`)
 
     SET COMMANDS:
     * DE: disable echo
@@ -18,14 +21,13 @@ class VRG:
     * PM0: set forward power mode
     * PM1: set absorbed power mode
     * SPnnnn: set RF power in watts
-    * S1nnnnn: set minimum allowable frequency setting (must be > 25 MHz)
-    * S2nnnnn: set maximum allowable frequency setting (must be < 42 MHz)
+    * S1nnnnn: set minimum allowable frequency setting
+    * S2nnnnn: set maximum allowable frequency setting
     * SFnnnnn: set frequency in kHz
     * TW: wide-band autotune
     * TT: narrow-band autotune
 
     READ STATE COMMANDS:
-    * !: ping the VRG [returns `"WAZOO!"`]
     * RF: read forward power output
     * RR: read reflected power
     * RB: read absorbed power
@@ -115,6 +117,14 @@ class VRG:
                 raise ConnectionError(f'Serial Communication Error: {e}')
 
         print(f'Command: "{command.strip("\n")}"')
+
+    ####################################################################################
+    ################################ ATTN Command ######################################
+    ####################################################################################
+
+    def ping(self) -> str:
+        command = '!'
+        return self.send_query(command)
 
     ####################################################################################
     ################################ Set Commands ######################################
@@ -234,10 +244,6 @@ class VRG:
     ####################################################################################
     ############################ Read State Commands ###################################
     ####################################################################################
-
-    def ping(self) -> str:
-        command = '!'
-        return self.send_query(command)
 
     def read_fwd_power(self) -> str:
         command = 'RF'
