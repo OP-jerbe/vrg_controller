@@ -9,7 +9,7 @@ from src.model.vrg_driver import VRG
 from src.view.main_window import MainWindow
 
 """
-TODO: Make the QLineEdit text green
+TODO:
 """
 
 

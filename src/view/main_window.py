@@ -200,7 +200,7 @@ class PowerLineEdit(QLineEdit):
     def focusOutEvent(self, event) -> None:
         super().focusOutEvent(event)
         current = self.text()
-        if current != self._initial_text:
+        if current and current != self._initial_text:
             self.power_value_committed.emit(current)
         else:
             self.setText(self._initial_text)  # Revert to original
@@ -222,7 +222,7 @@ class FreqLineEdit(QLineEdit):
     def focusOutEvent(self, event) -> None:
         super().focusOutEvent(event)
         current = self.text()
-        if current != self._initial_text:
+        if current and current != self._initial_text:
             self.freq_value_committed.emit(current)
         else:
             self.setText(self._initial_text)  # Revert to original
