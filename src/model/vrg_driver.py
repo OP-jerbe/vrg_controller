@@ -46,7 +46,7 @@ class VRG:
         self,
         resource_name: Optional[str] = None,
         instrument: Optional[MessageBasedResource] = None,
-        freq_range: tuple[int, int] = (25, 42),
+        freq_range: tuple[int | float, int | float] = (25, 42),
         max_power: int = 1000,
     ) -> None:
         self.rm = pyvisa.ResourceManager('@py')
@@ -59,16 +59,16 @@ class VRG:
             self.instrument.write_termination = '\r'
         self.lock = Lock()
 
-        # Set the frequecy range in MHz
+        # Set the hard frequecy limit range in MHz
         self.min_freq_limit = freq_range[0]
         self.max_freq_limit = freq_range[1]
 
+        # Set the valid frequency setting range
+        self.min_freq_setting = self.min_freq_limit
+        self.max_freq_setting = self.max_freq_limit
+
         # Set the maximum allowable power setting in Watts
         self.max_power_setting = max_power
-
-        # Get the valid frequency range in MHz
-        self.min_freq: float = float(self.read_min_freq_setting()) * 1e-3
-        self.max_freq: float = float(self.read_max_freq_setting()) * 1e-3
 
     def _send_query(self, query: str) -> str:
         """
@@ -183,7 +183,7 @@ class VRG:
         if not isinstance(freq, int | float):
             raise TypeError(f'Expected an int or float, but got {type(freq).__name__}.')
 
-        if not (self.min_freq <= freq <= self.max_freq):
+        if not (self.min_freq_setting <= freq <= self.max_freq_setting):
             raise ValueError(
                 f'Minimum Frequency of {freq} MHz is out of range. Minimum frequency must be between {self.min_freq_limit} and {self.max_freq_limit} MHz.'
             )
@@ -202,7 +202,7 @@ class VRG:
         if not isinstance(freq, int | float):
             raise TypeError(f'Expected an int or float, but got {type(freq).__name__}.')
 
-        if not (self.min_freq <= freq <= self.max_freq):
+        if not (self.min_freq_setting <= freq <= self.max_freq_setting):
             raise ValueError(
                 f'Maximum Frequency of {freq} MHz is out of range. Maximum frequency must be between {self.min_freq_limit} and {self.max_freq_limit} MHz.'
             )
@@ -224,9 +224,9 @@ class VRG:
         if not isinstance(freq, int | float):
             raise TypeError(f'Expected an int or float, but got {type(freq).__name__}')
 
-        if not (self.min_freq <= freq <= self.max_freq):
+        if not (self.min_freq_setting <= freq <= self.max_freq_setting):
             raise ValueError(
-                f'Frequency {freq} MHz is out of range. Must be between {self.min_freq:.2f} and {self.max_freq:.2f} MHz.'
+                f'Frequency {freq} MHz is out of range. Must be between {self.min_freq_setting:.2f} and {self.max_freq_setting:.2f} MHz.'
             )
 
         freq_kHz = int(freq * 1000)
