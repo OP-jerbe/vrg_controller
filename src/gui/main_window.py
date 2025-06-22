@@ -110,6 +110,10 @@ class MainWindow(QMainWindow):
         self.power_le = QLineEdit(placeholderText='Input Power Setting')
         self.freq_le = QLineEdit(placeholderText='Input Frequency Setting')
 
+        # Connect the QLineEdits to the handlers
+        self.power_le.returnPressed.connect(self.handle_power_le_entered)
+        self.freq_le.returnPressed.connect(self.handle_freq_le_entered)
+
         # Create the RF enable/disable button
         self.enable_rf_btn = QPushButton('Enable RF')
         self.enable_rf_btn.setCheckable(True)
@@ -202,3 +206,15 @@ class MainWindow(QMainWindow):
         Handle what happens when the Autotune button is clicked.
         """
         print('Autotuned.')
+
+    def handle_power_le_entered(self) -> None:
+        text = self.power_le.text()
+        print(text)
+        self.power_le.clearFocus()
+        # send set_power command
+
+    def handle_freq_le_entered(self) -> None:
+        text = self.freq_le.text()
+        print(text)
+        self.freq_le.clearFocus()
+        # send set_freq command
