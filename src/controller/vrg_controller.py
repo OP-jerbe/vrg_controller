@@ -45,6 +45,7 @@ class VRGController:
         self.view.autotune_btn.clicked.connect(self._handle_autotune_btn_clicked)
 
         # Connect the QActions (from the menu) to their handlers
+        self.view.connect_action.triggered.connect(self._handle_connect_clicked)
         self.view.exit_action.triggered.connect(self._handle_exit)
         self.view.absorbed_action.triggered.connect(self._handle_abs_mode_selected)
         self.view.forward_action.triggered.connect(self._handle_fwd_mode_selected)
@@ -54,6 +55,11 @@ class VRGController:
         Handle what happens when the Exit option is selected from the menu
         """
         self.view.close()
+
+    def _handle_connect_clicked(self) -> None:
+        print('Connect clicked')
+        # try to connect to VRG
+        # if connection is successful, enable command widgets
 
     def _handle_abs_mode_selected(self) -> None:
         """

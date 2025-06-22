@@ -71,6 +71,7 @@ class MainWindow(QMainWindow):
         power_mode_group.setExclusive(True)
 
         # Create the QActions
+        self.connect_action = QAction(text='Connect', parent=self)
         self.exit_action = QAction(text='Exit', parent=self)
         self.absorbed_action = QAction('Absorbed', self, checkable=True, checked=True)
         self.forward_action = QAction('Forward', self, checkable=True)
@@ -80,6 +81,7 @@ class MainWindow(QMainWindow):
         power_mode_group.addAction(self.forward_action)
 
         # Add actions to the QMenu objects.
+        file_menu.addAction(self.connect_action)
         file_menu.addAction(self.exit_action)
         power_mode_submenu.addAction(self.absorbed_action)
         power_mode_submenu.addAction(self.forward_action)
