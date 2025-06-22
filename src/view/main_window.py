@@ -72,7 +72,7 @@ class MainWindow(QMainWindow):
         power_mode_group.setExclusive(True)
 
         # Create the QActions
-        exit_action = QAction(text='Exit', parent=self)
+        self.exit_action = QAction(text='Exit', parent=self)
         self.absorbed_action = QAction('Absorbed', self, checkable=True, checked=True)
         self.forward_action = QAction('Forward', self, checkable=True)
 
@@ -81,17 +81,12 @@ class MainWindow(QMainWindow):
         power_mode_group.addAction(self.forward_action)
 
         # Add actions to the QMenu objects.
-        file_menu.addAction(exit_action)
+        file_menu.addAction(self.exit_action)
         power_mode_submenu.addAction(self.absorbed_action)
         power_mode_submenu.addAction(self.forward_action)
 
         # Add the submenu to the Options menu.
         options_menu.addMenu(power_mode_submenu)
-
-        # Connect the QActions to slots when clicked
-        exit_action.triggered.connect(self.handle_exit)
-        self.absorbed_action.triggered.connect(self.handle_abs_mode_selected)
-        self.forward_action.triggered.connect(self.handle_fwd_mode_selected)
 
     def create_widgets(self) -> None:
         # Create the QLabels
@@ -110,18 +105,12 @@ class MainWindow(QMainWindow):
         self.power_le = QLineEdit(placeholderText='Input Power Setting')
         self.freq_le = QLineEdit(placeholderText='Input Frequency Setting')
 
-        # Connect the QLineEdits to the handlers
-        self.power_le.returnPressed.connect(self.handle_power_le_entered)
-        self.freq_le.returnPressed.connect(self.handle_freq_le_entered)
-
         # Create the RF enable/disable button
         self.enable_rf_btn = QPushButton('Enable RF')
         self.enable_rf_btn.setCheckable(True)
-        self.enable_rf_btn.clicked.connect(self.handle_rf_enable_btn_clicked)
 
         # Create the autotune button
         self.autotune_btn = QPushButton('Autotune')
-        self.autotune_btn.clicked.connect(self.handle_autotune_btn_clicked)
 
     def set_widget_styles(self) -> None:
         # Set the power and frequency display styles
@@ -169,52 +158,3 @@ class MainWindow(QMainWindow):
         container = QWidget()
         container.setLayout(main_layout)
         self.setCentralWidget(container)
-
-    ####################################################################################
-    ##############################     HANDLERS     ####################################
-    ####################################################################################
-
-    def handle_exit(self) -> None:
-        """
-        Handle what happens when the Exit option is selected from the menu
-        """
-        self.close()
-
-    def handle_abs_mode_selected(self) -> None:
-        """
-        Handle what happens when absorbed mode is checked in the power mode option menu
-        """
-        print('Power mode changed to absorbed mode')
-
-    def handle_fwd_mode_selected(self) -> None:
-        """
-        Handle what happens when forward mode is checked in the power mode option menu
-        """
-        print('Power mode changed to forward mode.')
-
-    def handle_rf_enable_btn_clicked(self) -> None:
-        """
-        Handle what happens when the RF Enable button is clicked.
-        """
-        if self.enable_rf_btn.isChecked():
-            print('RF disabled.')
-        else:
-            print('RF enabled.')
-
-    def handle_autotune_btn_clicked(self) -> None:
-        """
-        Handle what happens when the Autotune button is clicked.
-        """
-        print('Autotuned.')
-
-    def handle_power_le_entered(self) -> None:
-        text = self.power_le.text()
-        print(text)
-        self.power_le.clearFocus()
-        # send set_power command
-
-    def handle_freq_le_entered(self) -> None:
-        text = self.freq_le.text()
-        print(text)
-        self.freq_le.clearFocus()
-        # send set_freq command
