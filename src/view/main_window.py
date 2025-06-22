@@ -27,36 +27,33 @@ class MainWindow(QMainWindow):
 
         # Create GUI
         apply_stylesheet(self, theme='dark_lightgreen.xml', invert_secondary=True)
-        self.create_gui()
+        self._create_gui()
 
-    ####################################################################################
-    ##############################     Create UI     ###################################
-    ####################################################################################
+    def _create_gui(self) -> None:
+        self._set_window_size()
+        self._set_title_bar()
+        self._create_menu_ui()
+        self._create_widgets()
+        self._set_widget_styles()
+        self._set_ui_layout()
 
-    def create_gui(self) -> None:
-        self.set_window_size()
-        self.set_title_bar()
-        self.create_menu_ui()
-        self.create_widgets()
-        self.set_widget_styles()
-        self.set_ui_layout()
-
-    def set_window_size(self) -> None:
+    def _set_window_size(self) -> None:
         window_width = 500
         window_height = 300
         self.setFixedSize(window_width, window_height)
 
-    def set_title_bar(self) -> None:
+    def _set_title_bar(self) -> None:
         # Get the root directory to the icon
         root_dir: Path = get_root_dir()
         icon_path: str = str(root_dir / 'assets' / 'vrg_icon.ico')
 
-        # Set the icon
+        # Set the window icon
         self.setWindowIcon(QIcon(icon_path))
 
+        # Set the window title
         self.setWindowTitle(f'VRG Controller v{self.version}')
 
-    def create_menu_ui(self) -> None:
+    def _create_menu_ui(self) -> None:
         # Create the QMenuBar object
         menu_bar = self.menuBar()
 
@@ -88,7 +85,7 @@ class MainWindow(QMainWindow):
         # Add the submenu to the Options menu.
         options_menu.addMenu(power_mode_submenu)
 
-    def create_widgets(self) -> None:
+    def _create_widgets(self) -> None:
         # Create the QLabels
         self.power_setting_label = QLabel('Power (W)')
         self.freq_setting_label = QLabel('Frequncy (MHz)')
@@ -112,7 +109,7 @@ class MainWindow(QMainWindow):
         # Create the autotune button
         self.autotune_btn = QPushButton('Autotune')
 
-    def set_widget_styles(self) -> None:
+    def _set_widget_styles(self) -> None:
         # Set the power and frequency display styles
         self.power_setting_label.setStyleSheet(setting_label_style())
         self.freq_setting_label.setStyleSheet(setting_label_style())
@@ -123,7 +120,7 @@ class MainWindow(QMainWindow):
         self.power_le.setStyleSheet(line_edit_style())
         self.freq_le.setStyleSheet(line_edit_style())
 
-    def set_ui_layout(self) -> None:
+    def _set_ui_layout(self) -> None:
         # Create the layouts
         main_layout = QVBoxLayout()
         top_layout = QGridLayout()
