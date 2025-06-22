@@ -6,7 +6,7 @@ import pyvisa
 from PySide6.QtWidgets import QApplication
 
 from helpers.helpers import get_root_dir
-from src.controller.vrg_controller import VRGController
+from src.controller.rf_controller import RFController
 from src.ini_reader import find_comport_device, get_rf_settings, load_config
 from src.model.vrg_driver import VRG
 from src.view.main_window import MainWindow
@@ -42,11 +42,10 @@ def run_app() -> NoReturn:
     version = '1.0.0'
     app = QApplication([])
 
-    # Create the com_port object
-    com_port: str | None
-
     # Get the com port and rf settings from the ini file
-    com_port, rf_settings = get_ini_info()
+    rf_com_port: str | None
+    rf_settings: tuple[str, str, str]
+    rf_com_port, rf_settings = get_ini_info()
 
     # Get the individual rf generator settings/specs
     min_freq: float = float(rf_settings[0])
@@ -57,9 +56,9 @@ def run_app() -> NoReturn:
     freq_range: tuple[float, float] = (min_freq, max_freq)
 
     # Set up the model-view-controller design pattern
-    model = VRG(resource_name=com_port, freq_range=freq_range, max_power=max_power)
+    model = VRG(resource_name=rf_com_port, freq_range=freq_range, max_power=max_power)
     view = MainWindow(version)
-    controller = VRGController(model, view)  # noqa: F841
+    controller = RFController(model, view)  # noqa: F841
 
     view.show()
     sys.exit(app.exec())
