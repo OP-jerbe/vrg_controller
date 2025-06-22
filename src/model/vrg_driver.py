@@ -70,7 +70,7 @@ class VRG:
         self.min_freq: float = float(self.read_min_freq_setting()) * 1e-3
         self.max_freq: float = float(self.read_max_freq_setting()) * 1e-3
 
-    def send_query(self, query: str) -> str:
+    def _send_query(self, query: str) -> str:
         """
         Send a command to the instrument and read the response.
 
@@ -95,7 +95,7 @@ class VRG:
         print(f'Query: "{query}"\nResponse:')
         return response
 
-    def send_command(self, command: str) -> None:
+    def _send_command(self, command: str) -> None:
         """
         Send a command to the instrument.
 
@@ -124,7 +124,7 @@ class VRG:
 
     def ping(self) -> str:
         command = '!'
-        return self.send_query(command)
+        return self._send_query(command)
 
     ####################################################################################
     ################################ Set Commands ######################################
@@ -132,29 +132,29 @@ class VRG:
 
     def enable_echo(self) -> None:
         command = 'EE'
-        self.send_command(command)
+        self._send_command(command)
         self.echo_on = True
 
     def disable_echo(self) -> None:
         command = 'DE'
-        self.send_command(command)
+        self._send_command(command)
         self.echo_on = False
 
     def enable_rf(self) -> None:
         command = 'ER'
-        self.send_command(command)
+        self._send_command(command)
 
     def disable_rf(self) -> None:
         command = 'DR'
-        self.send_command(command)
+        self._send_command(command)
 
     def set_fwd_mode(self) -> None:
         command = 'PM0'
-        self.send_command(command)
+        self._send_command(command)
 
     def set_abs_mode(self) -> None:
         command = 'PM1'
-        self.send_command(command)
+        self._send_command(command)
 
     def set_rf_power(self, power: int) -> None:
         """
@@ -171,7 +171,7 @@ class VRG:
                 f'Input {power} is out of bounds. Must be between 0 and {self.max_power_setting}.'
             )
         command = f'SP{power:04}'
-        self.send_command(command)
+        self._send_command(command)
 
     def set_min_freq(self, freq: int | float) -> None:
         """
@@ -190,7 +190,7 @@ class VRG:
 
         freq_kHz = int(freq * 1000)
         command = f'S1{freq_kHz:05d}'
-        self.send_command(command)
+        self._send_command(command)
 
     def set_max_freq(self, freq: int | float) -> None:
         """
@@ -209,7 +209,7 @@ class VRG:
 
         freq_kHz = int(freq * 1000)
         command = f'S2{freq_kHz:05d}'
-        self.send_command(command)
+        self._send_command(command)
 
     def set_freq(self, freq: int | float) -> None:
         """
@@ -231,15 +231,15 @@ class VRG:
 
         freq_kHz = int(freq * 1000)
         command = f'SF{freq_kHz:05d}'
-        self.send_command(command)
+        self._send_command(command)
 
     def autotune(self) -> None:
         command = 'TW'
-        self.send_command(command)
+        self._send_command(command)
 
     def narrow_autotune(self) -> None:
         command = 'TT'
-        self.send_command(command)
+        self._send_command(command)
 
     ####################################################################################
     ############################ Read State Commands ###################################
@@ -247,27 +247,27 @@ class VRG:
 
     def read_fwd_power(self) -> str:
         command = 'RF'
-        return self.send_query(command)
+        return self._send_query(command)
 
     def read_rfl_power(self) -> str:
         command = 'RR'
-        return self.send_query(command)
+        return self._send_query(command)
 
     def read_abs_power(self) -> str:
         command = 'RB'
-        return self.send_query(command)
+        return self._send_query(command)
 
     def read_factory_info(self) -> str:
         command = 'RI'
-        return self.send_query(command)
+        return self._send_query(command)
 
     def read_status_byte(self) -> str:
         command = 'GS'
-        return self.send_query(command)
+        return self._send_query(command)
 
     def read_status(self) -> str:
         command = 'RT'
-        return self.send_query(command)
+        return self._send_query(command)
 
     ####################################################################################
     ########################### Read Settings Commands #################################
@@ -275,19 +275,19 @@ class VRG:
 
     def read_power_setting(self) -> str:
         command = 'RO'
-        return self.send_query(command)
+        return self._send_query(command)
 
     def read_freq_setting(self) -> str:
         command = 'RQ'
-        return self.send_query(command)
+        return self._send_query(command)
 
     def read_min_freq_setting(self) -> str:
         command = 'R1'
-        return self.send_query(command)
+        return self._send_query(command)
 
     def read_max_freq_setting(self) -> str:
         command = 'R2'
-        return self.send_query(command)
+        return self._send_query(command)
 
 
 # Read command examples
