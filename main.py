@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QApplication
 from src.gui.main_window import MainWindow
 
 """
-TODO:
+TODO: Make the QLineEdit text green
 """
 
 
