@@ -24,7 +24,12 @@ def run_app() -> NoReturn:
     version = '1.0.0'
     app = QApplication([])
 
-    model = VRG(resource_name='ASRL1::INSTR')
+    # Below shows that the VRG class needs a resouce name (COM PORT basically)
+    # model = VRG(resource_name='ASRL1::INSTR')
+
+    freq_range = (38, 65)  # blaster stand VRG frequency range
+    max_power = 1100  # blaster stand VRG max power
+    model = VRG(freq_range=freq_range, max_power=max_power)
     view = MainWindow(version)
     controller = VRGController(model, view)  # noqa: F841
 
