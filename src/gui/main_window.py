@@ -1,7 +1,16 @@
 from pathlib import Path
 
-from PySide6.QtGui import QAction, QActionGroup, QIcon
-from PySide6.QtWidgets import QLabel, QLineEdit, QMainWindow, QMenu, QPushButton
+from PySide6.QtGui import QAction, QActionGroup, QIcon, Qt
+from PySide6.QtWidgets import (
+    QGridLayout,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QMenu,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 from qt_material import apply_stylesheet
 
 from helpers.helpers import get_root_dir
@@ -20,34 +29,14 @@ class MainWindow(QMainWindow):
         self.setFixedSize(window_width, window_height)
 
         root_dir: Path = get_root_dir()
-        print(str(root_dir))
         icon_path: str = str(root_dir / 'assets' / 'vrg_icon.ico')
         self.setWindowIcon(QIcon(icon_path))
-        self.setWindowTitle('VRG Controller')
+        self.setWindowTitle(f'VRG Controller v{self.version}')
         apply_stylesheet(self, theme='dark_lightgreen.xml', invert_secondary=True)
 
         self.create_menu_bar()
         self.create_widgets()
-
-    def create_widgets(self) -> None:
-        # Create the QLabels
-        self.abs_power_label = QLabel('Absorbed Power')
-        self.fwd_power_label = QLabel('Forward Power')
-        self.rfl_power_label = QLabel('Reflected Power')
-        self.freq_label = QLabel('Frequency')
-
-        # Create the QLineEdit entry boxes for power and frequency settings
-        self.power_le = QLineEdit()
-        self.freq_le = QLineEdit()
-
-        # Create the RF enable/disable button
-        self.enable_rf_btn = QPushButton('Enable RF')
-        self.enable_rf_btn.setCheckable(True)
-        self.enable_rf_btn.clicked.connect(self.handle_rf_enable_btn_clicked)
-
-        # Create the autotune button
-        self.autotune_btn = QPushButton('Autotune')
-        self.autotune_btn.clicked.connect(self.handle_autotune_btn_clicked)
+        self.set_ui_layout()
 
     def create_menu_bar(self) -> None:
         # Create the menu bar
@@ -85,6 +74,68 @@ class MainWindow(QMainWindow):
         exit_action.triggered.connect(self.handle_exit)
         self.absorbed_action.triggered.connect(self.handle_abs_mode_selected)
         self.forward_action.triggered.connect(self.handle_fwd_mode_selected)
+
+    def create_widgets(self) -> None:
+        # Create the QLabels
+        self.power_setting_label = QLabel('Power (W)')
+        self.freq_setting_label = QLabel('Frequncy (MHz)')
+        self.abs_power_label = QLabel('Absorbed Power')
+        self.abs_power_display_label = QLabel('0 W')
+        self.fwd_power_label = QLabel('Forward Power')
+        self.fwd_power_display_label = QLabel('0 W')
+        self.rfl_power_label = QLabel('Reflected Power')
+        self.rfl_power_display_label = QLabel('0 W')
+        self.freq_label = QLabel('Frequency')
+        self.freq_display_label = QLabel('0 MHz')
+
+        # Create the QLineEdit entry boxes for power and frequency settings
+        self.power_le = QLineEdit()
+        self.freq_le = QLineEdit()
+
+        # Create the RF enable/disable button
+        self.enable_rf_btn = QPushButton('Enable RF')
+        self.enable_rf_btn.setCheckable(True)
+        self.enable_rf_btn.clicked.connect(self.handle_rf_enable_btn_clicked)
+
+        # Create the autotune button
+        self.autotune_btn = QPushButton('Autotune')
+        self.autotune_btn.clicked.connect(self.handle_autotune_btn_clicked)
+
+    def set_ui_layout(self) -> None:
+        # Create the layouts
+        main_layout = QVBoxLayout()
+        top_layout = QGridLayout()
+        bot_layout = QGridLayout()
+
+        # Add widgets to layouts
+        top_layout.addWidget(self.enable_rf_btn, 0, 0)
+        top_layout.addWidget(
+            self.freq_setting_label, 0, 1, alignment=Qt.AlignmentFlag.AlignCenter
+        )
+        top_layout.addWidget(
+            self.power_setting_label, 0, 2, alignment=Qt.AlignmentFlag.AlignCenter
+        )
+        top_layout.addWidget(self.autotune_btn, 1, 0)
+        top_layout.addWidget(self.freq_le, 1, 1)
+        top_layout.addWidget(self.power_le, 1, 2)
+
+        bot_layout.addWidget(self.fwd_power_label, 0, 0)
+        bot_layout.addWidget(self.abs_power_label, 0, 1)
+        bot_layout.addWidget(self.fwd_power_display_label, 1, 0)
+        bot_layout.addWidget(self.abs_power_display_label, 1, 1)
+        bot_layout.addWidget(self.rfl_power_label, 2, 0)
+        bot_layout.addWidget(self.freq_label, 2, 1)
+        bot_layout.addWidget(self.rfl_power_display_label, 3, 0)
+        bot_layout.addWidget(self.freq_display_label, 3, 1)
+
+        # Add layouts to main_layout
+        main_layout.addLayout(top_layout)
+        main_layout.addLayout(bot_layout)
+
+        # Set the main layout container
+        container = QWidget()
+        container.setLayout(main_layout)
+        self.setCentralWidget(container)
 
     def handle_exit(self) -> None:
         """
