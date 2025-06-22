@@ -12,6 +12,8 @@ class VRGController:
         # Connect the QLineEdits to their handlers
         self.view.power_le.returnPressed.connect(self._handle_power_le_returnPressed)
         self.view.freq_le.returnPressed.connect(self._handle_freq_le_returnPressed)
+        self.view.power_le.power_value_committed.connect(self._handle_power_le_changed)
+        self.view.freq_le.freq_value_committed.connect(self._handle_freq_le_changed)
 
         # Connect the QPushButtons to their handlers
         self.view.enable_rf_btn.clicked.connect(self._handle_rf_enable_btn_clicked)
@@ -32,7 +34,7 @@ class VRGController:
         """
         Handle what happens when absorbed mode is checked in the power mode option menu
         """
-        print('Power mode changed to absorbed mode')
+        print('Absorbed Mode clicked.')
         if not self.model.instrument:
             return
         self.model.set_abs_mode()
@@ -41,7 +43,7 @@ class VRGController:
         """
         Handle what happens when forward mode is checked in the power mode option menu
         """
-        print('Power mode changed to forward mode.')
+        print('Forward Mode clicked.')
         if not self.model.instrument:
             return
         self.model.set_fwd_mode()
@@ -50,13 +52,12 @@ class VRGController:
         """
         Handle what happens when the RF Enable button is clicked.
         """
+        print('RF Enable button clicked.')
         if self.view.enable_rf_btn.isChecked():
-            print('RF enabled.')
             if not self.model.instrument:
                 return
             self.model.enable_rf()
         else:
-            print('RF disabled.')
             if not self.model.instrument:
                 return
             self.model.disable_rf()
@@ -65,19 +66,32 @@ class VRGController:
         """
         Handle what happens when the Autotune button is clicked.
         """
-        print('Autotuned.')
+        print('Autotune Clicked.')
         if not self.model.instrument:
             return
         self.model.autotune()
+        # might need a half second pause here
+        new_freq = self.model.read_freq_setting()
+        self.view.freq_le.setText(new_freq)
 
     def _handle_power_le_returnPressed(self) -> None:
-        text = self.view.power_le.text()
-        print(text)
         self.view.power_le.clearFocus()
-        # send set_power command
 
     def _handle_freq_le_returnPressed(self) -> None:
-        text = self.view.freq_le.text()
-        print(text)
         self.view.freq_le.clearFocus()
-        # send set_freq command
+
+    def _handle_power_le_changed(self, new_value: str) -> None:
+        try:
+            print(f'Power Requested: {new_value}')
+            power = int(new_value)
+            self.model.set_rf_power(power)
+        except Exception as e:
+            print(f'Error: {e}')
+
+    def _handle_freq_le_changed(self, new_value: str) -> None:
+        try:
+            print(f'Frequency Requested: {new_value}')
+            freq = float(new_value)
+            self.model.set_freq(freq)
+        except Exception as e:
+            print(f'Error: {e}')

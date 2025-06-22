@@ -1,6 +1,8 @@
 from pathlib import Path
+from typing import cast
 
-from PySide6.QtGui import QAction, QActionGroup, QIcon, Qt
+from PySide6.QtCore import QEvent, QObject, Signal
+from PySide6.QtGui import QAction, QActionGroup, QIcon, QMouseEvent, Qt
 from PySide6.QtWidgets import (
     QGridLayout,
     QLabel,
@@ -99,8 +101,8 @@ class MainWindow(QMainWindow):
         self.freq_display_label = QLabel('0 MHz')
 
         # Create the QLineEdit entry boxes for power and frequency settings
-        self.power_le = QLineEdit(placeholderText='Input Power Setting')
-        self.freq_le = QLineEdit(placeholderText='Input Frequency Setting')
+        self.power_le = PowerLineEdit(placeholderText='Input Power Setting')
+        self.freq_le = FreqLineEdit(placeholderText='Input Frequency Setting')
 
         # Create the RF enable/disable button
         self.enable_rf_btn = QPushButton('Enable RF')
@@ -154,4 +156,73 @@ class MainWindow(QMainWindow):
         # Set the main layout container
         container = QWidget()
         container.setLayout(main_layout)
+        container.installEventFilter(self)
         self.setCentralWidget(container)
+
+    def eventFilter(self, obj: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.MouseButtonPress and isinstance(
+            event, QMouseEvent
+        ):
+            pos = event.position().toPoint()
+            clicked_widget = self.centralWidget().childAt(pos)
+            focused = self.focusWidget()
+
+            # If the click is not on the focused widget or any of its children
+            if focused and (
+                clicked_widget is None or not self._is_child_of(clicked_widget, focused)
+            ):
+                focused.clearFocus()
+
+        return super().eventFilter(obj, event)
+
+    def _is_child_of(self, child: QWidget | None, parent: QWidget) -> bool:
+        """Check if child is the same as or a descendant of parent"""
+        while child is not None:
+            if child == parent:
+                return True
+            child = child.parentWidget()
+        return False
+
+
+class PowerLineEdit(QLineEdit):
+    power_value_committed = Signal(
+        str
+    )  # Signal emitted when the user leaves with a new value
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._initial_text = ''
+
+    def focusInEvent(self, event) -> None:
+        super().focusInEvent(event)
+        self._initial_text = self.text()
+
+    def focusOutEvent(self, event) -> None:
+        super().focusOutEvent(event)
+        current = self.text()
+        if current != self._initial_text:
+            self.power_value_committed.emit(current)
+        else:
+            self.setText(self._initial_text)  # Revert to original
+
+
+class FreqLineEdit(QLineEdit):
+    freq_value_committed = Signal(
+        str
+    )  # Signal emitted when the user leaves with a new value
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._initial_text = ''
+
+    def focusInEvent(self, event) -> None:
+        super().focusInEvent(event)
+        self._initial_text = self.text()
+
+    def focusOutEvent(self, event) -> None:
+        super().focusOutEvent(event)
+        current = self.text()
+        if current != self._initial_text:
+            self.freq_value_committed.emit(current)
+        else:
+            self.setText(self._initial_text)  # Revert to original
