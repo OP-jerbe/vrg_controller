@@ -35,44 +35,46 @@ class VRGController:
         Handle what happens when absorbed mode is checked in the power mode option menu
         """
         print('Absorbed Mode clicked.')
-        if not self.model.instrument:
-            return
-        self.model.set_abs_mode()
+        try:
+            self.model.set_abs_mode()
+        except Exception as e:
+            print(f'Error: {e}')
 
     def _handle_fwd_mode_selected(self) -> None:
         """
         Handle what happens when forward mode is checked in the power mode option menu
         """
         print('Forward Mode clicked.')
-        if not self.model.instrument:
-            return
-        self.model.set_fwd_mode()
+        try:
+            self.model.set_fwd_mode()
+        except Exception as e:
+            print(f'Error: {e}')
 
     def _handle_rf_enable_btn_clicked(self) -> None:
         """
         Handle what happens when the RF Enable button is clicked.
         """
         print('RF Enable button clicked.')
-        if self.view.enable_rf_btn.isChecked():
-            if not self.model.instrument:
-                return
-            self.model.enable_rf()
-        else:
-            if not self.model.instrument:
-                return
-            self.model.disable_rf()
+        try:
+            if self.view.enable_rf_btn.isChecked():
+                self.model.enable_rf()
+            else:
+                self.model.disable_rf()
+        except Exception as e:
+            print(f'Error: {e}')
 
     def _handle_autotune_btn_clicked(self) -> None:
         """
         Handle what happens when the Autotune button is clicked.
         """
         print('Autotune Clicked.')
-        if not self.model.instrument:
-            return
-        self.model.autotune()
-        # might need a half second pause here
-        new_freq = self.model.read_freq_setting()
-        self.view.freq_le.setText(new_freq)
+        try:
+            self.model.autotune()
+            # might need a half second pause here
+            new_freq = self.model.read_freq_setting()
+            self.view.freq_le.setText(new_freq)
+        except Exception as e:
+            print(f'Error: {e}')
 
     def _handle_power_le_returnPressed(self) -> None:
         self.view.power_le.clearFocus()
