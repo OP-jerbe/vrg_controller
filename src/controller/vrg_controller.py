@@ -6,7 +6,32 @@ class VRGController:
     def __init__(self, model: VRG, view: MainWindow) -> None:
         self.model = model
         self.view = view
+        self.command_widgets = (
+            self.view.power_le,
+            self.view.freq_le,
+            self.view.enable_rf_btn,
+            self.view.autotune_btn,
+        )
         self._connect_handlers()
+        if not self.model.instrument:
+            self._disable_gui()
+
+    def _read_interlock_bit(self) -> int:
+        try:
+            _, _, interlock_bit_str = self.model.read_status_byte().split()
+            interlock_bit: int = int(interlock_bit_str)
+            return interlock_bit
+        except Exception as e:
+            print(f'Error: {e}')
+            return -1
+
+    def _disable_gui(self) -> None:
+        for widget in self.command_widgets:
+            widget.setEnabled(False)
+
+    def _enable_gui(self) -> None:
+        for widget in self.command_widgets:
+            widget.setEnabled(True)
 
     def _connect_handlers(self) -> None:
         # Connect the QLineEdits to their handlers
