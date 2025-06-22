@@ -1,16 +1,34 @@
 import sys
-from typing import NoReturn, Optional
+from pathlib import Path
+from typing import NoReturn
 
 import pyvisa
 from PySide6.QtWidgets import QApplication
 
+from helpers.helpers import get_root_dir
 from src.controller.vrg_controller import VRGController
+from src.ini_reader import find_comport_device, get_rf_settings, load_config
 from src.model.vrg_driver import VRG
 from src.view.main_window import MainWindow
 
 """
 TODO:
 """
+
+
+def get_ini_info() -> tuple[str | None, tuple[str, str, str]]:
+    root_dir: Path = get_root_dir()
+    ini_file: str = 'rf_controller.ini'
+    ini_file_path: str = str(root_dir / ini_file)
+    config_data = load_config(ini_file_path)
+    rf_generator = find_comport_device(config_data, 'RFGenerator')
+    device: str = rf_generator[0]
+    rf_com_port: str | None = rf_generator[1]
+    if device == 'None':
+        rf_com_port = None
+    rf_settings = get_rf_settings(config_data)
+
+    return rf_com_port, rf_settings
 
 
 def run_app() -> NoReturn:
@@ -24,12 +42,22 @@ def run_app() -> NoReturn:
     version = '1.0.0'
     app = QApplication([])
 
-    # Below shows that the VRG class needs a resouce name (COM PORT basically)
-    # model = VRG(resource_name='ASRL1::INSTR')
+    # Create the com_port object
+    com_port: str | None
 
-    freq_range = (38, 65)  # blaster stand VRG frequency range
-    max_power = 1100  # blaster stand VRG max power
-    model = VRG(freq_range=freq_range, max_power=max_power)
+    # Get the com port and rf settings from the ini file
+    com_port, rf_settings = get_ini_info()
+
+    # Get the individual rf generator settings/specs
+    min_freq: float = float(rf_settings[0])
+    max_freq: float = float(rf_settings[1])
+    max_power: int = int(rf_settings[2])
+
+    # Set the frequency range
+    freq_range: tuple[float, float] = (min_freq, max_freq)
+
+    # Set up the model-view-controller design pattern
+    model = VRG(resource_name=com_port, freq_range=freq_range, max_power=max_power)
     view = MainWindow(version)
     controller = VRGController(model, view)  # noqa: F841
 
