@@ -10,8 +10,8 @@ class VRGController:
 
     def _connect_handlers(self) -> None:
         # Connect the QLineEdits to their handlers
-        self.view.power_le.returnPressed.connect(self._handle_power_le_entered)
-        self.view.freq_le.returnPressed.connect(self._handle_freq_le_entered)
+        self.view.power_le.returnPressed.connect(self._handle_power_le_returnPressed)
+        self.view.freq_le.returnPressed.connect(self._handle_freq_le_returnPressed)
 
         # Connect the QPushButtons to their handlers
         self.view.enable_rf_btn.clicked.connect(self._handle_rf_enable_btn_clicked)
@@ -33,12 +33,18 @@ class VRGController:
         Handle what happens when absorbed mode is checked in the power mode option menu
         """
         print('Power mode changed to absorbed mode')
+        if not self.model.instrument:
+            return
+        self.model.set_abs_mode()
 
     def _handle_fwd_mode_selected(self) -> None:
         """
         Handle what happens when forward mode is checked in the power mode option menu
         """
         print('Power mode changed to forward mode.')
+        if not self.model.instrument:
+            return
+        self.model.set_fwd_mode()
 
     def _handle_rf_enable_btn_clicked(self) -> None:
         """
@@ -46,22 +52,31 @@ class VRGController:
         """
         if self.view.enable_rf_btn.isChecked():
             print('RF enabled.')
+            if not self.model.instrument:
+                return
+            self.model.enable_rf()
         else:
             print('RF disabled.')
+            if not self.model.instrument:
+                return
+            self.model.disable_rf()
 
     def _handle_autotune_btn_clicked(self) -> None:
         """
         Handle what happens when the Autotune button is clicked.
         """
         print('Autotuned.')
+        if not self.model.instrument:
+            return
+        self.model.autotune()
 
-    def _handle_power_le_entered(self) -> None:
+    def _handle_power_le_returnPressed(self) -> None:
         text = self.view.power_le.text()
         print(text)
         self.view.power_le.clearFocus()
         # send set_power command
 
-    def _handle_freq_le_entered(self) -> None:
+    def _handle_freq_le_returnPressed(self) -> None:
         text = self.view.freq_le.text()
         print(text)
         self.view.freq_le.clearFocus()
