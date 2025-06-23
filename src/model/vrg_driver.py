@@ -90,7 +90,7 @@ class VRG:
             except Exception as e:
                 raise ConnectionError(f'Serial Communication Error: {e}')
 
-        print(f'Query: "{query}"\nResponse:')
+        print(f'Query: "{query}"\nResponse: "{response}"')
         return response
 
     def _send_command(self, command: str) -> None:
