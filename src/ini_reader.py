@@ -12,8 +12,8 @@ def load_config(file_name: str) -> ConfigData:
 
 def find_comport_device(config_data: ConfigData, header: str) -> tuple[str, str]:
     device = config_data.get(header, 'device')
-    address = config_data.get(header, 'com_port')
-    return device, address
+    com_port = config_data.get(header, 'port')
+    return device, com_port
 
 
 def get_rf_settings(
