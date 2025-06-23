@@ -9,7 +9,7 @@ from src.model.vrg_driver import VRG
 from src.view.main_window import MainWindow
 
 """
-TODO:
+TODO: Figure out why the power mode menu doesn't show the radio buttons anymore.
 """
 
 

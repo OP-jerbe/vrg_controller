@@ -49,14 +49,12 @@ class VRG:
         freq_range: tuple[int | float, int | float] = (25, 42),
         max_power: int = 1000,
     ) -> None:
+        self.resource_name = resource_name
+        self.instrument = instrument
         self.rm = pyvisa.ResourceManager('@py')
-        self.instrument: Optional[MessageBasedResource] = instrument
-        if self.instrument is None and resource_name is not None:
-            self.instrument = cast(
-                MessageBasedResource, self.rm.open_resource(resource_name)
-            )
-            self.instrument.read_termination = '\r'
-            self.instrument.write_termination = '\r'
+
+        if self.instrument is None and self.resource_name is not None:
+            self.instrument = self.open_connection(self.resource_name)
         self.lock = Lock()
 
         # Set the hard frequecy limit range in MHz
@@ -117,6 +115,14 @@ class VRG:
                 raise ConnectionError(f'Serial Communication Error: {e}')
 
         print(f'Command: "{command.strip("\n")}"')
+
+    def open_connection(self, resource_name: str) -> MessageBasedResource:
+        self.instrument = cast(
+            MessageBasedResource, self.rm.open_resource(resource_name)
+        )
+        self.instrument.read_termination = '\r'
+        self.instrument.write_termination = '\r'
+        return self.instrument
 
     ####################################################################################
     ################################ ATTN Command ######################################

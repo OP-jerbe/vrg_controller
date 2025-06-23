@@ -1,3 +1,7 @@
+from pyvisa.resources import MessageBasedResource
+
+from helpers.helpers import get_ini_info
+
 from ..model.vrg_driver import VRG
 from ..view.main_window import MainWindow
 
@@ -120,6 +124,16 @@ class RFController:
         Try to connect to the RF generator.
         """
         print('Connect clicked')
+        # Get ini info
+        com_port, rf_settings = get_ini_info()
+        min_freq: float = float(rf_settings[0])
+        max_freq: float = float(rf_settings[1])
+        freq_range = (min_freq, max_freq)
+        max_power = int(rf_settings[2])
+
+        # Connect to the RF generator
+        self.model = VRG(com_port, freq_range=freq_range, max_power=max_power)
+
         # try to connect to VRG
         # if connection is successful, enable command widgets
 
@@ -130,6 +144,7 @@ class RFController:
         print('Absorbed Mode clicked.')
         try:
             self.model.set_abs_mode()
+            self.view.absorbed_action.setChecked(True)
         except Exception as e:
             print(f'Error: {e}')
 
