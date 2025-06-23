@@ -2,6 +2,10 @@ from PySide6.QtCore import QObject, QTimer, Signal
 
 
 class Worker(QObject):
+    """
+    Creates a Worker object to signal to the controller to update the view once per second.
+    """
+
     updated = Signal()
     stop_requested = Signal()
     stopped = Signal()
