@@ -1,9 +1,10 @@
-from pyvisa.resources import MessageBasedResource
+from PySide6.QtCore import QCoreApplication, QThread
 
 from helpers.helpers import get_ini_info
 
 from ..model.vrg_driver import VRG
 from ..view.main_window import MainWindow
+from .bg_thread import Worker
 
 
 class RFController:
@@ -18,20 +19,54 @@ class RFController:
         )
         self._connect_events_to_handlers()
 
-        # If there is not instrument connected, disable the gui
+        # Create the backgroud thread and worker to update GUI with readback values
+        self._create_bg_thread()
+
+        # If there is not an instrument connected, disable the gui and return
         if not self.model.instrument:
             self._disable_gui()
+            return
 
         try:
-            self.model.set_abs_mode()
+            self._init_gui_display()
         except Exception as e:
             print(f'Error: {e}')
 
-        # Get the interlock status and set the enable button accordingly
-        self._check_interlock()
+        # Start the background thread updates
+        self.worker_thread.start()
 
     ####################################################################################
-    ###########################    STATE CHECKERS    ###############################@
+    #############################    BACKGROUND THREAD    ##############################
+    ####################################################################################
+
+    def _create_bg_thread(self) -> None:
+        """
+        Create the background Qthread and Worker objects. Move the Worker to the
+        background thread and connect Signals to their handler methods.
+        """
+        self.worker_thread = QThread()
+        self.worker = Worker()
+        self.worker.moveToThread(self.worker_thread)
+        self.worker_thread.started.connect(self.worker.start)
+        self.worker.updated.connect(self._handle_update_ui)
+        self.worker.stopped.connect(self._on_worker_stopped)
+
+    def _on_worker_stopped(self) -> None:
+        self.stop_bg_thread()
+
+    def stop_bg_thread(self) -> None:
+        # Emit signal to request worker to stop
+        self.worker.stop_requested.emit()
+
+        # Give control back to event loop so that stop() runs in the worker thread
+        QCoreApplication.processEvents()
+
+        # Stop the thread
+        self.worker_thread.quit()
+        self.worker_thread.wait()  # Blocks until thread exits
+
+    ####################################################################################
+    ##############################   STATE CHECKERS    #################################
     ####################################################################################
 
     def _read_interlock_bit(self) -> int:
@@ -44,11 +79,11 @@ class RFController:
             `-1` if an error occurs
         """
         try:
-            _, _, interlock_bit_str = self.model.read_status_byte().split()
+            interlock_bit_str = self.model.read_status_byte()[-1]
             interlock_bit: int = int(interlock_bit_str)
             return interlock_bit
         except Exception as e:
-            print(f'Error: {e}')
+            print(f'    Error: {e}')
             return -1
 
     def _check_interlock(self) -> None:
@@ -58,21 +93,50 @@ class RFController:
         interlock_bit = self._read_interlock_bit()
         match interlock_bit:
             case 0:
-                print('Interlock bit = 0 (OK)')
+                print('    Interlock bit = 0 (OK)')
+                self.view.enable_rf_btn.setEnabled(True)
+                self.view.enable_rf_btn.setText('Enable RF')
+            case 4:
+                print('    Interlock bit = 4 (OK)')
                 self.view.enable_rf_btn.setEnabled(True)
                 self.view.enable_rf_btn.setText('Enable RF')
             case 1:
-                print('Interlock bit = 1 (interlocked)')
+                print('    Interlock bit = 1 (interlocked)')
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('INT')
             case -1:
-                print('Interlock bit = -1 (error)')
+                print('    Interlock bit = -1 (error)')
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('COM Error')
+            case 5:
+                print('    Interlock bit = 5 (interlocked)')
+                self.view.enable_rf_btn.setEnabled(False)
+                self.view.enable_rf_btn.setText('INT')
+            case _:
+                print(f'    Unexpected bit:  {interlock_bit}')
+                self.view.enable_rf_btn.setEnabled(False)
+                self.view.enable_rf_btn.setText('Error')
 
     ####################################################################################
     #########################    GUI ENABLER/DISABLER    ###############################
     ####################################################################################
+
+    def _init_gui_display(self) -> None:
+        """
+        Initialzed the GUI display upon start up
+        """
+        self.model.disable_echo()  # send "DE" to VRG
+        self._check_interlock()  # send "GS" to VRG
+        self.model.set_abs_mode()  # send "PM1" to VRG
+        power_setting_str = self.model.read_power_setting()  # send "RO" to VRG
+        freq_setting_str = self.model.read_freq_setting()  # send "RQ" to VRG
+
+        power_setting_num = float(power_setting_str)
+        freq_setting_num = float(freq_setting_str) * 1e-3
+
+        self.view.power_le.setText(f'{power_setting_num:.0f}')
+        self.view.freq_le.setText(f'{freq_setting_num:.2f}')
+        self.view.freq_display_label.setText(f'{freq_setting_num:.2f} MHz')
 
     def _disable_gui(self) -> None:
         """
@@ -113,29 +177,30 @@ class RFController:
         self.view.absorbed_action.triggered.connect(self._handle_abs_mode_selected)
         self.view.forward_action.triggered.connect(self._handle_fwd_mode_selected)
 
-    def _handle_exit(self) -> None:
-        """
-        Close the main window.
-        """
-        self.view.close()
-
     def _handle_connect_clicked(self) -> None:
         """
         Try to connect to the RF generator.
         """
         print('Connect clicked')
         # Get ini info
-        com_port, rf_settings = get_ini_info()
+        rf_com_port, rf_settings = get_ini_info()
+
+        resource_name = rf_com_port
+        if rf_com_port is not None:
+            resource_name = f'ASRL{rf_com_port[-1]}::INSTR'
         min_freq: float = float(rf_settings[0])
         max_freq: float = float(rf_settings[1])
         freq_range = (min_freq, max_freq)
         max_power = int(rf_settings[2])
 
         # Connect to the RF generator
-        self.model = VRG(com_port, freq_range=freq_range, max_power=max_power)
-
-        # try to connect to VRG
-        # if connection is successful, enable command widgets
+        try:
+            self.model = VRG(resource_name, freq_range=freq_range, max_power=max_power)
+            self._init_gui_display()
+            self.view.autotune_btn.setEnabled(True)
+            self.worker_thread.start()
+        except Exception as e:
+            print(f'    Error: {e}')
 
     def _handle_abs_mode_selected(self) -> None:
         """
@@ -179,8 +244,9 @@ class RFController:
         try:
             self.model.autotune()
             # might need a half second pause here
-            new_freq = self.model.read_freq_setting()
-            self.view.freq_le.setText(new_freq)
+            freq_str = self.model.read_freq_setting()
+            freq_num = float(freq_str) * 1e-3
+            self.view.freq_le.setText(f'{freq_num:.2f}')
         except Exception as e:
             print(f'Error: {e}')
 
@@ -217,3 +283,43 @@ class RFController:
             self.model.set_freq(freq)
         except Exception as e:
             print(f'Error: {e}')
+
+    def _handle_update_ui(self) -> None:
+        """
+        Called every second by Worker to update view with model data.
+        """
+        try:
+            self._check_interlock()
+
+            # Get the readings from the RF generator
+            power_setting_str: str = self.model.read_power_setting()
+            freq_setting_str: str = self.model.read_freq_setting()
+            abs_power_str: str = self.model.read_abs_power()
+            fwd_power_str: str = self.model.read_fwd_power()
+            rfl_power_str: str = self.model.read_rfl_power()
+            freq_str: str = self.model.read_freq_setting()
+
+            power_setting_num = float(power_setting_str)
+            freq_setting_num = float(freq_setting_str) * 1e-3
+            abs_power_num = float(abs_power_str)
+            fwd_power_num = float(fwd_power_str)
+            rfl_power_num = float(rfl_power_str)
+            freq_num = float(freq_str) * 1e-3
+
+            # Set the display values in the GUI
+            if not self.view.power_le.hasFocus():
+                self.view.power_le.setText(f'{power_setting_num:.0f}')
+            if not self.view.freq_le.hasFocus():
+                self.view.freq_le.setText(f'{freq_setting_num:.2f}')
+            self.view.abs_power_display_label.setText(f'{abs_power_num:.0f} W')
+            self.view.fwd_power_display_label.setText(f'{fwd_power_num:.0f} W')
+            self.view.rfl_power_display_label.setText(f'{rfl_power_num:.0f} W')
+            self.view.freq_display_label.setText(f'{freq_num:.2f} MHz')
+        except Exception as e:
+            print(f'Error: {e}')
+
+    def _handle_exit(self) -> None:
+        """
+        Close the main window.
+        """
+        self.view.close()
