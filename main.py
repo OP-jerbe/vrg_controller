@@ -9,7 +9,11 @@ from src.model.vrg_driver import VRG
 from src.view.main_window import MainWindow
 
 """
-TODO: Figure out why the power mode menu doesn't show the radio buttons anymore.
+TODO: 
+
+1) Verify that File > Connect works as expected.
+2) Make validators for PowerLineEdit and FreqLineEdit so only numbers are allowed.
+3) Implement the background thread to pull data from the VRG at a rate of once per second.
 """
 
 
