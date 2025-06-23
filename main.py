@@ -33,6 +33,11 @@ def run_app() -> NoReturn:
     rf_settings: tuple[str, str, str]
     rf_com_port, rf_settings = get_ini_info()
 
+    # Set the resource name
+    resource_name = rf_com_port
+    if rf_com_port is not None:
+        resource_name = f'ASRL{rf_com_port[-1]}::INSTR'
+
     # Get the individual rf generator settings/specs
     min_freq: float = float(rf_settings[0])
     max_freq: float = float(rf_settings[1])
@@ -42,11 +47,13 @@ def run_app() -> NoReturn:
     freq_range: tuple[float, float] = (min_freq, max_freq)
 
     # Set up the model-view-controller design pattern
-    model = VRG(resource_name=rf_com_port, freq_range=freq_range, max_power=max_power)
+    model = VRG(resource_name=resource_name, freq_range=freq_range, max_power=max_power)
     view = MainWindow(version)
-    controller = RFController(model, view)  # noqa: F841
+    controller = RFController(model, view)
 
     view.show()
+
+    app.aboutToQuit.connect(controller.stop_bg_thread)
     sys.exit(app.exec())
 
 
