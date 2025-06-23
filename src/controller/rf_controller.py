@@ -12,21 +12,33 @@ class RFController:
             self.view.enable_rf_btn,
             self.view.autotune_btn,
         )
-
         self._connect_events_to_handlers()
 
         # If there is not instrument connected, disable the gui
         if not self.model.instrument:
             self._disable_gui()
 
+        try:
+            self.model.set_abs_mode()
+        except Exception as e:
+            print(f'Error: {e}')
+
         # Get the interlock status and set the enable button accordingly
         self._check_interlock()
 
     ####################################################################################
-    ###########################    INTERLOCK CHECKER    ###############################@
+    ###########################    STATE CHECKERS    ###############################@
     ####################################################################################
 
     def _read_interlock_bit(self) -> int:
+        """
+        Gets the interlock bit from the status byte.
+
+        Returns: int\n
+            `0` if interlock OK.
+            `1` if interlock circuit is open.
+            `-1` if an error occurs
+        """
         try:
             _, _, interlock_bit_str = self.model.read_status_byte().split()
             interlock_bit: int = int(interlock_bit_str)
@@ -36,6 +48,9 @@ class RFController:
             return -1
 
     def _check_interlock(self) -> None:
+        """
+        Enables or disables the Enable RF button based on the interlock status.
+        """
         interlock_bit = self._read_interlock_bit()
         match interlock_bit:
             case 0:
@@ -56,10 +71,16 @@ class RFController:
     ####################################################################################
 
     def _disable_gui(self) -> None:
+        """
+        Disable all widgets that send commands to the RF generator
+        """
         for widget in self.command_widgets:
             widget.setEnabled(False)
 
     def _enable_gui(self) -> None:
+        """
+        Enable all widgets that send commands to the RF generator.
+        """
         for widget in self.command_widgets:
             widget.setEnabled(True)
 
@@ -68,17 +89,21 @@ class RFController:
     ####################################################################################
 
     def _connect_events_to_handlers(self) -> None:
-        # Connect the QLineEdits to their handlers
+        """
+        Connects the events of the widgets to the handler methods. Events include
+        returnPressed, mouse clicks and
+        """
+        # Connect the QLineEdit events to their handlers
         self.view.power_le.returnPressed.connect(self._handle_power_le_returnPressed)
         self.view.freq_le.returnPressed.connect(self._handle_freq_le_returnPressed)
         self.view.power_le.power_value_committed.connect(self._handle_power_le_changed)
         self.view.freq_le.freq_value_committed.connect(self._handle_freq_le_changed)
 
-        # Connect the QPushButtons to their handlers
+        # Connect the QPushButton events to their handlers
         self.view.enable_rf_btn.clicked.connect(self._handle_rf_enable_btn_clicked)
         self.view.autotune_btn.clicked.connect(self._handle_autotune_btn_clicked)
 
-        # Connect the QActions (from the menu) to their handlers
+        # Connect the QAction events (from the menu) to their handlers
         self.view.connect_action.triggered.connect(self._handle_connect_clicked)
         self.view.exit_action.triggered.connect(self._handle_exit)
         self.view.absorbed_action.triggered.connect(self._handle_abs_mode_selected)
@@ -86,18 +111,21 @@ class RFController:
 
     def _handle_exit(self) -> None:
         """
-        Handle what happens when the Exit option is selected from the menu
+        Close the main window.
         """
         self.view.close()
 
     def _handle_connect_clicked(self) -> None:
+        """
+        Try to connect to the RF generator.
+        """
         print('Connect clicked')
         # try to connect to VRG
         # if connection is successful, enable command widgets
 
     def _handle_abs_mode_selected(self) -> None:
         """
-        Handle what happens when absorbed mode is checked in the power mode option menu
+        Set the power mode to Absorbed.
         """
         print('Absorbed Mode clicked.')
         try:
@@ -107,7 +135,7 @@ class RFController:
 
     def _handle_fwd_mode_selected(self) -> None:
         """
-        Handle what happens when forward mode is checked in the power mode option menu
+        Set the power mode to Forward
         """
         print('Forward Mode clicked.')
         try:
@@ -117,7 +145,7 @@ class RFController:
 
     def _handle_rf_enable_btn_clicked(self) -> None:
         """
-        Handle what happens when the RF Enable button is clicked.
+        Turn on the RF if clicked. Turn off the RF if unclicked.
         """
         print('RF Enable button clicked.')
         try:
@@ -130,7 +158,7 @@ class RFController:
 
     def _handle_autotune_btn_clicked(self) -> None:
         """
-        Handle what happens when the Autotune button is clicked.
+        Send the wideband autotune command to the RF generator.
         """
         print('Autotune Clicked.')
         try:
@@ -142,12 +170,21 @@ class RFController:
             print(f'Error: {e}')
 
     def _handle_power_le_returnPressed(self) -> None:
+        """
+        Clear the focus of the PowerLineEdit.
+        """
         self.view.power_le.clearFocus()
 
     def _handle_freq_le_returnPressed(self) -> None:
+        """
+        Clear the focus of the FreqLineEdit
+        """
         self.view.freq_le.clearFocus()
 
     def _handle_power_le_changed(self, new_value: str) -> None:
+        """
+        Set the RF power to the string emitted by the `power_value_committed` Signal.
+        """
         try:
             print(f'Power Requested: {new_value}')
             power = int(new_value)
@@ -156,6 +193,9 @@ class RFController:
             print(f'Error: {e}')
 
     def _handle_freq_le_changed(self, new_value: str) -> None:
+        """
+        Set the frequency to the string emitted by the `freq_value_committed` Signal.
+        """
         try:
             print(f'Frequency Requested: {new_value}')
             freq = float(new_value)
