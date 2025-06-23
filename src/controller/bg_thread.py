@@ -1,4 +1,4 @@
-from PySide6.QtCore import QObject, QTimer, Signal
+from PySide6.QtCore import QObject, Qt, QTimer, Signal
 
 
 class Worker(QObject):
@@ -13,7 +13,7 @@ class Worker(QObject):
     def __init__(self) -> None:
         super().__init__()
         self.timer = None
-        self.stop_requested.connect(self.stop)
+        self.stop_requested.connect(self.stop, Qt.ConnectionType.QueuedConnection)
 
     def start(self) -> None:
         self.timer = QTimer(self)
