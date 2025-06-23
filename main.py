@@ -13,7 +13,7 @@ TODO:
 
 1) Verify that File > Connect works as expected.
 2) Make validators for PowerLineEdit and FreqLineEdit so only numbers are allowed.
-3) Implement the background thread to pull data from the VRG at a rate of once per second.
+3) Make sure background thread stops gracefully upon closing the app.
 """
 
 
@@ -36,7 +36,11 @@ def run_app() -> NoReturn:
     # Set the resource name
     resource_name = rf_com_port
     if rf_com_port is not None:
-        resource_name = f'ASRL{rf_com_port[-1]}::INSTR'
+        try:
+            resource_name = f'ASRL{rf_com_port[-1]}::INSTR'
+        except Exception as e:
+            print(f'Error: {e}')
+            resource_name = None
 
     # Get the individual rf generator settings/specs
     min_freq: float = float(rf_settings[0])
