@@ -12,9 +12,19 @@ class RFController:
             self.view.enable_rf_btn,
             self.view.autotune_btn,
         )
-        self._connect_handlers()
+
+        self._connect_events_to_handlers()
+
+        # If there is not instrument connected, disable the gui
         if not self.model.instrument:
             self._disable_gui()
+
+        # Get the interlock status and set the enable button accordingly
+        self._check_interlock()
+
+    ####################################################################################
+    ###########################    INTERLOCK CHECKER    ###############################@
+    ####################################################################################
 
     def _read_interlock_bit(self) -> int:
         try:
@@ -25,6 +35,26 @@ class RFController:
             print(f'Error: {e}')
             return -1
 
+    def _check_interlock(self) -> None:
+        interlock_bit = self._read_interlock_bit()
+        match interlock_bit:
+            case 0:
+                print('Interlock bit = 0 (OK)')
+                self.view.enable_rf_btn.setEnabled(True)
+                self.view.enable_rf_btn.setText('Enable RF')
+            case 1:
+                print('Interlock bit = 1 (interlocked)')
+                self.view.enable_rf_btn.setEnabled(False)
+                self.view.enable_rf_btn.setText('INT')
+            case -1:
+                print('Interlock bit = -1 (error)')
+                self.view.enable_rf_btn.setEnabled(False)
+                self.view.enable_rf_btn.setText('COM Error')
+
+    ####################################################################################
+    #########################    GUI ENABLER/DISABLER    ###############################
+    ####################################################################################
+
     def _disable_gui(self) -> None:
         for widget in self.command_widgets:
             widget.setEnabled(False)
@@ -33,7 +63,11 @@ class RFController:
         for widget in self.command_widgets:
             widget.setEnabled(True)
 
-    def _connect_handlers(self) -> None:
+    ####################################################################################
+    ###############################    HANDLERS    #####################################
+    ####################################################################################
+
+    def _connect_events_to_handlers(self) -> None:
         # Connect the QLineEdits to their handlers
         self.view.power_le.returnPressed.connect(self._handle_power_le_returnPressed)
         self.view.freq_le.returnPressed.connect(self._handle_freq_le_returnPressed)
