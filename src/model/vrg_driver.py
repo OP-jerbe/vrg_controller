@@ -275,17 +275,16 @@ class VRG:
     ############################ Read State Commands ###################################
     ####################################################################################
 
-    def read_fwd_power(self) -> int:
+    def read_fwd_power(self) -> int | None:
         command = 'RF'
         response = self._send_query(command).strip('RF')
         try:
             fwd_power = int(response)
             return fwd_power
-        except Exception as e:
-            print(f'    Error converting fwd power to int: {e}')
-            raise
+        except ValueError as ve:
+            print(f'    Error converting fwd power to int: {ve}')
 
-    def read_rfl_power(self) -> int:
+    def read_rfl_power(self) -> int | None:
         command = 'RR'
         response = self._send_query(command).strip('RR')
         try:
@@ -293,9 +292,8 @@ class VRG:
             return rfl_power
         except Exception as e:
             print(f'    Error converting rfl power to int: {e}')
-            raise
 
-    def read_abs_power(self) -> int:
+    def read_abs_power(self) -> int | None:
         command = 'RB'
         response = self._send_query(command).strip('RB')
         try:
@@ -303,15 +301,21 @@ class VRG:
             return abs_power
         except Exception as e:
             print(f'    Error converting abs power to int: {e}')
-            raise
 
     def read_factory_info(self) -> str:
         command = 'RI'
         return self._send_query(command)
 
-    def read_status_byte(self) -> str:
+    def read_status_byte(self) -> list[int]:
         command = 'GS'
-        return self._send_query(command)
+        response: str = self._send_query(command).strip('GS')
+        # Check to make sure the response is actually the three char string
+        if len(response) > 3:
+            return [-1, -1, -1]
+        status_list: list[int] = []
+        for char in response:
+            status_list.append(int(char))
+        return status_list
 
     def read_status(self) -> str:
         command = 'RT'
@@ -321,7 +325,7 @@ class VRG:
     ########################### Read Settings Commands #################################
     ####################################################################################
 
-    def read_power_setting(self) -> int:
+    def read_power_setting(self) -> int | None:
         command = 'RO'
         response = self._send_query(command).strip('RO')
         try:
@@ -329,9 +333,8 @@ class VRG:
             return power_setting
         except Exception as e:
             print(f'    Error converting power setting to int: {e}')
-            raise
 
-    def read_freq_setting(self) -> float:
+    def read_freq_setting(self) -> float | None:
         command = 'RQ'
         response = self._send_query(command).strip('RQ')
         try:
@@ -340,7 +343,6 @@ class VRG:
             return freq_setting
         except Exception as e:
             print(f'    Error converting freq setting to float: {e}')
-            raise
 
     def read_min_freq_setting(self) -> str:
         command = 'R1'
