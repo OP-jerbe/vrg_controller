@@ -27,10 +27,7 @@ class RFController:
             self._disable_gui()
             return
 
-        try:
-            self._init_gui_display()
-        except Exception as e:
-            print(f'Error: {e}')
+        self._init_gui_display()
 
         # Start the background thread updates
         self.worker_thread.start()
@@ -79,8 +76,7 @@ class RFController:
             `-1` if an error occurs
         """
         try:
-            interlock_bit_str = self.model.read_status_byte()[-1]
-            interlock_bit: int = int(interlock_bit_str)
+            interlock_bit: int = self.model.read_status_byte()[-1]
             return interlock_bit
         except Exception as e:
             print(f'    Error reading interlock bit: {e}')
@@ -90,7 +86,7 @@ class RFController:
         """
         Enables or disables the Enable RF button based on the interlock status.
         """
-        interlock_bit = self._read_interlock_bit()
+        interlock_bit: int = self._read_interlock_bit()
         match interlock_bit:
             case -1:
                 print('    Interlock bit = -1 (error)')
@@ -135,16 +131,25 @@ class RFController:
         """
         Initialzed the GUI display upon start up
         """
-        self.model.disable_echo()  # send "DE" to VRG
-        self.model.disable_rf()  # send "DR" to VRG
-        self._check_interlock()  # send "GS" to VRG
-        self.model.set_abs_mode()  # send "PM1" to VRG
-        power_setting: int = self.model.read_power_setting()  # send "RO" to VRG
-        freq_setting: float = self.model.read_freq_setting()  # send "RQ" to VRG
+        try:
+            self.model.disable_echo()  # send "DE" to VRG
+            self.model.disable_rf()  # send "DR" to VRG
+            self._check_interlock()  # send "GS" to VRG
+            self.model.set_abs_mode()  # send "PM1" to VRG
+            power_setting: int | None = (
+                self.model.read_power_setting()
+            )  # send "RO" to VRG
+            freq_setting: float | None = (
+                self.model.read_freq_setting()
+            )  # send "RQ" to VRG
 
-        self.view.power_le.setText(f'{power_setting}')
-        self.view.freq_le.setText(f'{freq_setting:.2f}')
-        self.view.freq_display_label.setText(f'{freq_setting:.2f} MHz')
+            self.view.power_le.setText(f'{power_setting:0f}')
+            self.view.freq_le.setText(f'{freq_setting:.2f}')
+            self.view.freq_display_label.setText(f'{freq_setting:.2f} MHz')
+        except TypeError as te:
+            print(f'    TypeError: {te}')
+        except Exception as e:
+            print(f'    Unexpected Error initializing GUI display: {e}')
 
     def _disable_gui(self) -> None:
         """
@@ -253,7 +258,7 @@ class RFController:
         try:
             self.model.autotune()
             # might need a half second pause here
-            freq: float = self.model.read_freq_setting()
+            freq: float | None = self.model.read_freq_setting()
             self.view.freq_le.setText(f'{freq:.2f}')
             self.view.freq_display_label.setText(f'{freq:.2f}')
         except Exception as e:
@@ -301,21 +306,23 @@ class RFController:
             self._check_interlock()
 
             # Get the readings from the RF generator
-            power_setting: int = self.model.read_power_setting()
-            freq_setting: float = self.model.read_freq_setting()
-            abs_power: int = self.model.read_abs_power()
-            fwd_power: int = self.model.read_fwd_power()
-            rfl_power: int = self.model.read_rfl_power()
+            power_setting: int | None = self.model.read_power_setting()
+            freq_setting: float | None = self.model.read_freq_setting()
+            abs_power: int | None = self.model.read_abs_power()
+            fwd_power: int | None = self.model.read_fwd_power()
+            rfl_power: int | None = self.model.read_rfl_power()
 
             # Set the display values in the GUI
             if not self.view.power_le.hasFocus():
-                self.view.power_le.setText(f'{power_setting}')
+                self.view.power_le.setText(f'{power_setting:0f}')
             if not self.view.freq_le.hasFocus():
                 self.view.freq_le.setText(f'{freq_setting:.2f}')
-            self.view.abs_power_display_label.setText(f'{abs_power} W')
-            self.view.fwd_power_display_label.setText(f'{fwd_power} W')
-            self.view.rfl_power_display_label.setText(f'{rfl_power} W')
+            self.view.abs_power_display_label.setText(f'{abs_power:0f} W')
+            self.view.fwd_power_display_label.setText(f'{fwd_power:0f} W')
+            self.view.rfl_power_display_label.setText(f'{rfl_power:0f} W')
             self.view.freq_display_label.setText(f'{freq_setting:.2f} MHz')
+        except TypeError as te:
+            print(f'    TypeError: {te}')
         except Exception as e:
             self.stop_bg_thread()
             print(f'    BG THREAD STOPPED. Unexpected error updating UI: {e}')
