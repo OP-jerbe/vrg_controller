@@ -83,7 +83,7 @@ class RFController:
             interlock_bit: int = int(interlock_bit_str)
             return interlock_bit
         except Exception as e:
-            print(f'    Error: {e}')
+            print(f'    Error reading interlock bit: {e}')
             return -1
 
     def _check_interlock(self) -> None:
@@ -204,7 +204,7 @@ class RFController:
             self.view.autotune_btn.setEnabled(True)
             self.worker_thread.start()
         except Exception as e:
-            print(f'    Error: {e}')
+            print(f'    Error trying to connect to RF generator: {e}')
 
     def _handle_abs_mode_selected(self) -> None:
         """
@@ -215,7 +215,7 @@ class RFController:
             self.model.set_abs_mode()
             self.view.absorbed_action.setChecked(True)
         except Exception as e:
-            print(f'Error: {e}')
+            print(f'    Error setting absorbed mode: {e}')
 
     def _handle_fwd_mode_selected(self) -> None:
         """
@@ -225,7 +225,7 @@ class RFController:
         try:
             self.model.set_fwd_mode()
         except Exception as e:
-            print(f'Error: {e}')
+            print(f'    Error setting forward mode: {e}')
 
     def _handle_rf_enable_btn_clicked(self) -> None:
         """
@@ -238,7 +238,7 @@ class RFController:
             else:
                 self.model.disable_rf()
         except Exception as e:
-            print(f'Error: {e}')
+            print(f'    Error enabling/disabling RF: {e}')
 
     def _handle_autotune_btn_clicked(self) -> None:
         """
@@ -252,7 +252,7 @@ class RFController:
             freq_num = float(freq_str) * 1e-3
             self.view.freq_le.setText(f'{freq_num:.2f}')
         except Exception as e:
-            print(f'Error: {e}')
+            print(f'    Error Autotuning: {e}')
 
     def _handle_power_le_returnPressed(self) -> None:
         """
@@ -275,7 +275,7 @@ class RFController:
             power = int(new_value)
             self.model.set_rf_power(power)
         except Exception as e:
-            print(f'Error: {e}')
+            print(f'    Error setting power: {e}')
 
     def _handle_freq_le_changed(self, new_value: str) -> None:
         """
@@ -286,7 +286,7 @@ class RFController:
             freq = float(new_value)
             self.model.set_freq(freq)
         except Exception as e:
-            print(f'Error: {e}')
+            print(f'    Error setting frequency: {e}')
 
     def _handle_update_ui(self) -> None:
         """
@@ -321,9 +321,9 @@ class RFController:
             self.view.freq_display_label.setText(f'{freq_num:.2f} MHz')
         except PermissionError as pe:
             self.stop_bg_thread()
-            print(f'PermissionError: {pe}')
+            print(f'    BG Thread stopped. PermissionError trying to update UI: {pe}')
         except Exception as e:
-            print(f'Error: {e}')
+            print(f'    Unexpected error updating UI: {e}')
 
     def _handle_exit(self) -> None:
         """
