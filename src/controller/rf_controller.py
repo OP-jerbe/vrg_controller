@@ -86,7 +86,7 @@ class RFController:
             print(f'    Error reading interlock bit: {e}')
             return -1
 
-    def _check_interlock(self) -> None:
+    def _check_interlock(self) -> int:
         """
         Enables or disables the Enable RF button based on the interlock status.
         """
@@ -97,29 +97,35 @@ class RFController:
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('COM Error')
+                return interlock_bit
             case 0:
                 print('    Interlock bit = 0 (OK - Enable Switch OFF)')
                 self.view.enable_rf_btn.setEnabled(True)
                 self.view.enable_rf_btn.setText('Enable RF')
+                return interlock_bit
             case 1:
                 print('    Interlock bit = 1 (interlocked - Enable Switch OFF)')
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('INT')
+                return interlock_bit
             case 4:
                 print('    Interlock bit = 4 (OK - Enable Switch ON)')
                 self.view.enable_rf_btn.setEnabled(True)
                 self.view.enable_rf_btn.setText('Enable RF')
+                return interlock_bit
             case 5:
                 print('    Interlock bit = 5 (interlocked - Enable Swith ON)')
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('INT')
+                return interlock_bit
             case _:
                 print(f'    Unexpected bit:  {interlock_bit}')
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('Unk Error')
+                return interlock_bit
 
     ####################################################################################
     #########################    GUI ENABLER/DISABLER    ###############################
@@ -130,6 +136,7 @@ class RFController:
         Initialzed the GUI display upon start up
         """
         self.model.disable_echo()  # send "DE" to VRG
+        self.model.disable_rf()  # send "DR" to VRG
         self._check_interlock()  # send "GS" to VRG
         self.model.set_abs_mode()  # send "PM1" to VRG
         power_setting_str = self.model.read_power_setting()  # send "RO" to VRG
@@ -202,6 +209,7 @@ class RFController:
             self.model = VRG(resource_name, freq_range=freq_range, max_power=max_power)
             self._init_gui_display()
             self.view.autotune_btn.setEnabled(True)
+            self.model.flush_input_buffer()
             self.worker_thread.start()
         except Exception as e:
             print(f'    Error trying to connect to RF generator: {e}')
@@ -319,11 +327,9 @@ class RFController:
             self.view.fwd_power_display_label.setText(f'{fwd_power_num:.0f} W')
             self.view.rfl_power_display_label.setText(f'{rfl_power_num:.0f} W')
             self.view.freq_display_label.setText(f'{freq_num:.2f} MHz')
-        except PermissionError as pe:
-            self.stop_bg_thread()
-            print(f'    BG Thread stopped. PermissionError trying to update UI: {pe}')
         except Exception as e:
-            print(f'    Unexpected error updating UI: {e}')
+            self.stop_bg_thread()
+            print(f'    BG THREAD STOPPED. Unexpected error updating UI: {e}')
 
     def _handle_exit(self) -> None:
         """
