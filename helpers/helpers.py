@@ -5,6 +5,12 @@ from src.ini_reader import find_comport_device, get_rf_settings, load_config
 
 
 def get_root_dir() -> Path:
+    """
+    Get the path to the root directory of where the script is being run from.
+
+    Returns (Path):
+        The Path object to the root directory.
+    """
     if getattr(sys, 'frozen', False):  # Check if running from the PyInstaller EXE
         return Path(getattr(sys, '_MEIPASS', '.'))
     else:  # Running in a normal Python environment
@@ -12,6 +18,13 @@ def get_root_dir() -> Path:
 
 
 def get_ini_info() -> tuple[str | None, tuple[str, str, str]]:
+    """
+    Get the initialization information from the .ini file.
+
+    Returns [tuple(str | None, tuple(str, str, str))]:
+        The RF generator's COM port number and its specs.\n
+        Or if the device is set to 'None', rf_com_port is returned as None.
+    """
     root_dir: Path = get_root_dir()
     ini_file: str = 'rf_controller.ini'
     ini_file_path: str = str(root_dir / ini_file)
