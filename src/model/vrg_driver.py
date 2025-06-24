@@ -275,17 +275,35 @@ class VRG:
     ############################ Read State Commands ###################################
     ####################################################################################
 
-    def read_fwd_power(self) -> str:
+    def read_fwd_power(self) -> int:
         command = 'RF'
-        return self._send_query(command)
+        response = self._send_query(command).strip('RF')
+        try:
+            fwd_power = int(response)
+            return fwd_power
+        except Exception as e:
+            print(f'    Error converting fwd power to int: {e}')
+            raise
 
-    def read_rfl_power(self) -> str:
+    def read_rfl_power(self) -> int:
         command = 'RR'
-        return self._send_query(command)
+        response = self._send_query(command).strip('RR')
+        try:
+            rfl_power = int(response)
+            return rfl_power
+        except Exception as e:
+            print(f'    Error converting rfl power to int: {e}')
+            raise
 
-    def read_abs_power(self) -> str:
+    def read_abs_power(self) -> int:
         command = 'RB'
-        return self._send_query(command)
+        response = self._send_query(command).strip('RB')
+        try:
+            abs_power = int(response)
+            return abs_power
+        except Exception as e:
+            print(f'    Error converting abs power to int: {e}')
+            raise
 
     def read_factory_info(self) -> str:
         command = 'RI'
@@ -303,13 +321,26 @@ class VRG:
     ########################### Read Settings Commands #################################
     ####################################################################################
 
-    def read_power_setting(self) -> str:
+    def read_power_setting(self) -> int:
         command = 'RO'
-        return self._send_query(command)
+        response = self._send_query(command).strip('RO')
+        try:
+            power_setting = int(response)
+            return power_setting
+        except Exception as e:
+            print(f'    Error converting power setting to int: {e}')
+            raise
 
-    def read_freq_setting(self) -> str:
+    def read_freq_setting(self) -> float:
         command = 'RQ'
-        return self._send_query(command)
+        response = self._send_query(command).strip('RQ')
+        try:
+            # Multiply response by 1e-3 to convert to MHz
+            freq_setting = float(response) * 1e-3
+            return freq_setting
+        except Exception as e:
+            print(f'    Error converting freq setting to float: {e}')
+            raise
 
     def read_min_freq_setting(self) -> str:
         command = 'R1'

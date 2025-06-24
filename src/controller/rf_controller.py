@@ -139,15 +139,12 @@ class RFController:
         self.model.disable_rf()  # send "DR" to VRG
         self._check_interlock()  # send "GS" to VRG
         self.model.set_abs_mode()  # send "PM1" to VRG
-        power_setting_str = self.model.read_power_setting()  # send "RO" to VRG
-        freq_setting_str = self.model.read_freq_setting()  # send "RQ" to VRG
+        power_setting: int = self.model.read_power_setting()  # send "RO" to VRG
+        freq_setting: float = self.model.read_freq_setting()  # send "RQ" to VRG
 
-        power_setting_num = float(power_setting_str)
-        freq_setting_num = float(freq_setting_str) * 1e-3
-
-        self.view.power_le.setText(f'{power_setting_num:.0f}')
-        self.view.freq_le.setText(f'{freq_setting_num:.2f}')
-        self.view.freq_display_label.setText(f'{freq_setting_num:.2f} MHz')
+        self.view.power_le.setText(f'{power_setting}')
+        self.view.freq_le.setText(f'{freq_setting:.2f}')
+        self.view.freq_display_label.setText(f'{freq_setting:.2f} MHz')
 
     def _disable_gui(self) -> None:
         """
@@ -256,9 +253,9 @@ class RFController:
         try:
             self.model.autotune()
             # might need a half second pause here
-            freq_str = self.model.read_freq_setting()
-            freq_num = float(freq_str) * 1e-3
-            self.view.freq_le.setText(f'{freq_num:.2f}')
+            freq: float = self.model.read_freq_setting()
+            self.view.freq_le.setText(f'{freq:.2f}')
+            self.view.freq_display_label.setText(f'{freq:.2f}')
         except Exception as e:
             print(f'    Error Autotuning: {e}')
 
@@ -304,29 +301,21 @@ class RFController:
             self._check_interlock()
 
             # Get the readings from the RF generator
-            power_setting_str: str = self.model.read_power_setting()
-            freq_setting_str: str = self.model.read_freq_setting()
-            abs_power_str: str = self.model.read_abs_power()
-            fwd_power_str: str = self.model.read_fwd_power()
-            rfl_power_str: str = self.model.read_rfl_power()
-            freq_str: str = self.model.read_freq_setting()
-
-            power_setting_num = float(power_setting_str)
-            freq_setting_num = float(freq_setting_str) * 1e-3
-            abs_power_num = float(abs_power_str)
-            fwd_power_num = float(fwd_power_str)
-            rfl_power_num = float(rfl_power_str)
-            freq_num = float(freq_str) * 1e-3
+            power_setting: int = self.model.read_power_setting()
+            freq_setting: float = self.model.read_freq_setting()
+            abs_power: int = self.model.read_abs_power()
+            fwd_power: int = self.model.read_fwd_power()
+            rfl_power: int = self.model.read_rfl_power()
 
             # Set the display values in the GUI
             if not self.view.power_le.hasFocus():
-                self.view.power_le.setText(f'{power_setting_num:.0f}')
+                self.view.power_le.setText(f'{power_setting}')
             if not self.view.freq_le.hasFocus():
-                self.view.freq_le.setText(f'{freq_setting_num:.2f}')
-            self.view.abs_power_display_label.setText(f'{abs_power_num:.0f} W')
-            self.view.fwd_power_display_label.setText(f'{fwd_power_num:.0f} W')
-            self.view.rfl_power_display_label.setText(f'{rfl_power_num:.0f} W')
-            self.view.freq_display_label.setText(f'{freq_num:.2f} MHz')
+                self.view.freq_le.setText(f'{freq_setting:.2f}')
+            self.view.abs_power_display_label.setText(f'{abs_power} W')
+            self.view.fwd_power_display_label.setText(f'{fwd_power} W')
+            self.view.rfl_power_display_label.setText(f'{rfl_power} W')
+            self.view.freq_display_label.setText(f'{freq_setting:.2f} MHz')
         except Exception as e:
             self.stop_bg_thread()
             print(f'    BG THREAD STOPPED. Unexpected error updating UI: {e}')
