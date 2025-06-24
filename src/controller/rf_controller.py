@@ -92,28 +92,32 @@ class RFController:
         """
         interlock_bit = self._read_interlock_bit()
         match interlock_bit:
+            case -1:
+                print('    Interlock bit = -1 (error)')
+                self.view.enable_rf_btn.setChecked(False)
+                self.view.enable_rf_btn.setEnabled(False)
+                self.view.enable_rf_btn.setText('COM Error')
             case 0:
                 print('    Interlock bit = 0 (OK)')
                 self.view.enable_rf_btn.setEnabled(True)
                 self.view.enable_rf_btn.setText('Enable RF')
+            case 1:
+                print('    Interlock bit = 1 (interlocked)')
+                self.view.enable_rf_btn.setChecked(False)
+                self.view.enable_rf_btn.setEnabled(False)
+                self.view.enable_rf_btn.setText('INT')
             case 4:
                 print('    Interlock bit = 4 (OK)')
                 self.view.enable_rf_btn.setEnabled(True)
                 self.view.enable_rf_btn.setText('Enable RF')
-            case 1:
-                print('    Interlock bit = 1 (interlocked)')
-                self.view.enable_rf_btn.setEnabled(False)
-                self.view.enable_rf_btn.setText('INT')
-            case -1:
-                print('    Interlock bit = -1 (error)')
-                self.view.enable_rf_btn.setEnabled(False)
-                self.view.enable_rf_btn.setText('COM Error')
             case 5:
                 print('    Interlock bit = 5 (interlocked)')
+                self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('INT')
             case _:
                 print(f'    Unexpected bit:  {interlock_bit}')
+                self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('Error')
 
@@ -315,6 +319,9 @@ class RFController:
             self.view.fwd_power_display_label.setText(f'{fwd_power_num:.0f} W')
             self.view.rfl_power_display_label.setText(f'{rfl_power_num:.0f} W')
             self.view.freq_display_label.setText(f'{freq_num:.2f} MHz')
+        except PermissionError as pe:
+            self.stop_bg_thread()
+            print(f'PermissionError: {pe}')
         except Exception as e:
             print(f'Error: {e}')
 
