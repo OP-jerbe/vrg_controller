@@ -98,20 +98,20 @@ class RFController:
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('COM Error')
             case 0:
-                print('    Interlock bit = 0 (OK)')
+                print('    Interlock bit = 0 (OK - Enable Switch OFF)')
                 self.view.enable_rf_btn.setEnabled(True)
                 self.view.enable_rf_btn.setText('Enable RF')
             case 1:
-                print('    Interlock bit = 1 (interlocked)')
+                print('    Interlock bit = 1 (interlocked - Enable Switch OFF)')
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('INT')
             case 4:
-                print('    Interlock bit = 4 (OK)')
+                print('    Interlock bit = 4 (OK - Enable Switch ON)')
                 self.view.enable_rf_btn.setEnabled(True)
                 self.view.enable_rf_btn.setText('Enable RF')
             case 5:
-                print('    Interlock bit = 5 (interlocked)')
+                print('    Interlock bit = 5 (interlocked - Enable Swith ON)')
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('INT')
@@ -119,7 +119,7 @@ class RFController:
                 print(f'    Unexpected bit:  {interlock_bit}')
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(False)
-                self.view.enable_rf_btn.setText('Error')
+                self.view.enable_rf_btn.setText('Unk Error')
 
     ####################################################################################
     #########################    GUI ENABLER/DISABLER    ###############################
