@@ -2,6 +2,7 @@ from threading import Lock
 from typing import Optional, cast
 
 import pyvisa
+import pyvisa.constants
 from pyvisa.resources import MessageBasedResource
 
 
@@ -68,6 +69,23 @@ class VRG:
         # Set the maximum allowable power setting in Watts
         self.max_power_setting = max_power
 
+    def flush_input_buffer(self) -> None:
+        """
+        Flush any unread data from the device's input buffer.
+        Useful if previous reads were incomplete or out of sync.
+        """
+        if not self.instrument:
+            return
+
+        with self.lock:
+            try:
+                while True:
+                    self.instrument.read_bytes(1024, break_on_termchar=False)
+            except pyvisa.errors.VisaIOError as e:
+                # Expected when no more data is available
+                if e.error_code != pyvisa.constants.VI_ERROR_TMO:
+                    raise
+
     def _send_query(self, query: str) -> str:
         """
         Send a command to the instrument and read the response.
@@ -83,6 +101,7 @@ class VRG:
                 'Attempted to communicate with VRG, but no instrument is connected.'
             )
 
+        self.flush_input_buffer()
         with self.lock:
             try:
                 self.instrument.write(query)
@@ -108,6 +127,7 @@ class VRG:
                 'Attempted to communicate with VRG, but no instrument is connected.'
             )
 
+        self.flush_input_buffer()
         with self.lock:
             try:
                 self.instrument.write(command)
