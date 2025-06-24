@@ -50,12 +50,18 @@ class VRG:
         freq_range: tuple[int | float, int | float] = (25, 42),
         max_power: int = 1000,
     ) -> None:
+        # Get the resource name and instrument
         self.resource_name = resource_name
         self.instrument = instrument
+
+        # Use '@py' as the resource manager from pyvisa-py library (hidden import)
         self.rm = pyvisa.ResourceManager('@py')
 
+        # Make a connection to the instrument if a resource name was given
         if self.instrument is None and self.resource_name is not None:
             self.instrument = self.open_connection(self.resource_name)
+
+        # Create the threading lock object
         self.lock = Lock()
 
         # Set the hard frequecy limit range in MHz
