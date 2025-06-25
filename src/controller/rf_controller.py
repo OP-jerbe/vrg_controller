@@ -71,9 +71,11 @@ class RFController:
         Gets the interlock bit from the status byte.
 
         Returns: int\n
-            `0` if interlock OK.
-            `1` if interlock circuit is open.
-            `-1` if an error occurs
+            `-1` if an error occurs.
+            `0` if interlock OK and enable switch is off.
+            `1` if interlock NOK and enable switch is off.
+            `4` if interlock OK and enable switch is on.
+            `5` if interlock NOK and enable switch is on.
         """
         try:
             interlock_bit: int = self.model.read_status_byte()[-1]
@@ -134,7 +136,7 @@ class RFController:
         try:
             self.model.disable_echo()  # send "DE" to VRG
             self.model.disable_rf()  # send "DR" to VRG
-            self._check_interlock()  # send "GS" to VRG
+            self._check_interlock()  # send "GS" to VRG, returns interlock bit
             self.model.set_abs_mode()  # send "PM1" to VRG
             power_setting: int | None = (
                 self.model.read_power_setting()
@@ -143,6 +145,7 @@ class RFController:
                 self.model.read_freq_setting()
             )  # send "RQ" to VRG
 
+            # Set the text in the gui
             self.view.power_le.setText(f'{power_setting:0f}')
             self.view.freq_le.setText(f'{freq_setting:.2f}')
             self.view.freq_display_label.setText(f'{freq_setting:.2f} MHz')
@@ -196,13 +199,15 @@ class RFController:
         """
         print('Connect clicked')
         # Get ini info
+        rf_com_port: str | None
+        rf_settings: tuple[str, str, str]
         rf_com_port, rf_settings = get_ini_info()
 
         resource_name = rf_com_port
         if rf_com_port is not None:
             resource_name = f'ASRL{rf_com_port[-1]}::INSTR'
-        min_freq: float = float(rf_settings[0])
-        max_freq: float = float(rf_settings[1])
+        min_freq = float(rf_settings[0])
+        max_freq = float(rf_settings[1])
         freq_range = (min_freq, max_freq)
         max_power = int(rf_settings[2])
 
@@ -223,7 +228,9 @@ class RFController:
         print('Absorbed Mode clicked.')
         try:
             self.model.set_abs_mode()
-            self.view.absorbed_action.setChecked(True)
+            self.view.absorbed_action.setChecked(
+                True
+            )  # TODO: Check if this is necessary
         except Exception as e:
             print(f'    Error setting absorbed mode: {e}')
 
@@ -234,6 +241,9 @@ class RFController:
         print('Forward Mode clicked.')
         try:
             self.model.set_fwd_mode()
+            self.view.forward_action.setChecked(
+                True
+            )  # TODO: Check if this is necessary
         except Exception as e:
             print(f'    Error setting forward mode: {e}')
 
