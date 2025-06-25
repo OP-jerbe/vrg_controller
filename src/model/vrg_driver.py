@@ -279,7 +279,7 @@ class VRG:
         command = 'RF'
         response = self._send_query(command).strip(command)
         try:
-            fwd_power = int(response)
+            fwd_power = int(float(response))
             return fwd_power
         except ValueError as ve:
             print(f'    Error converting fwd power to int: {ve}')
@@ -288,7 +288,7 @@ class VRG:
         command = 'RR'
         response = self._send_query(command).strip(command)
         try:
-            rfl_power = int(response)
+            rfl_power = int(float(response))
             return rfl_power
         except Exception as e:
             print(f'    Error converting rfl power to int: {e}')
@@ -297,7 +297,7 @@ class VRG:
         command = 'RB'
         response = self._send_query(command).strip(command)
         try:
-            abs_power = int(response)
+            abs_power = int(float(response))
             return abs_power
         except Exception as e:
             print(f'    Error converting abs power to int: {e}')
@@ -329,7 +329,7 @@ class VRG:
         command = 'RO'
         response = self._send_query(command).strip(command)
         try:
-            power_setting = int(response)
+            power_setting = int(float(response))
             return power_setting
         except TypeError as te:
             print(f'    Error converting power setting to int: {te}')
