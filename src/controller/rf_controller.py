@@ -146,7 +146,7 @@ class RFController:
             )  # send "RQ" to VRG
 
             # Set the text in the gui
-            self.view.power_le.setText(f'{power_setting:0f}')
+            self.view.power_le.setText(f'{power_setting:.0f}')
             self.view.freq_le.setText(f'{freq_setting:.2f}')
             self.view.freq_display_label.setText(f'{freq_setting:.2f} MHz')
         except TypeError as te:
@@ -228,9 +228,6 @@ class RFController:
         print('Absorbed Mode clicked.')
         try:
             self.model.set_abs_mode()
-            self.view.absorbed_action.setChecked(
-                True
-            )  # TODO: Check if this is necessary
         except Exception as e:
             print(f'    Error setting absorbed mode: {e}')
 
@@ -241,9 +238,6 @@ class RFController:
         print('Forward Mode clicked.')
         try:
             self.model.set_fwd_mode()
-            self.view.forward_action.setChecked(
-                True
-            )  # TODO: Check if this is necessary
         except Exception as e:
             print(f'    Error setting forward mode: {e}')
 
@@ -324,12 +318,12 @@ class RFController:
 
             # Set the display values in the GUI
             if not self.view.power_le.hasFocus():
-                self.view.power_le.setText(f'{power_setting:0f}')
+                self.view.power_le.setText(f'{power_setting:.0f}')
             if not self.view.freq_le.hasFocus():
                 self.view.freq_le.setText(f'{freq_setting:.2f}')
-            self.view.abs_power_display_label.setText(f'{abs_power:0f} W')
-            self.view.fwd_power_display_label.setText(f'{fwd_power:0f} W')
-            self.view.rfl_power_display_label.setText(f'{rfl_power:0f} W')
+            self.view.abs_power_display_label.setText(f'{abs_power:.0f} W')
+            self.view.fwd_power_display_label.setText(f'{fwd_power:.0f} W')
+            self.view.rfl_power_display_label.setText(f'{rfl_power:.0f} W')
             self.view.freq_display_label.setText(f'{freq_setting:.2f} MHz')
         except TypeError as te:
             print(f'    TypeError: {te}')
