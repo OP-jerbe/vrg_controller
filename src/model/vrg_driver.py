@@ -277,7 +277,7 @@ class VRG:
 
     def read_fwd_power(self) -> int | None:
         command = 'RF'
-        response = self._send_query(command).strip('RF')
+        response = self._send_query(command).strip(command)
         try:
             fwd_power = int(response)
             return fwd_power
@@ -286,7 +286,7 @@ class VRG:
 
     def read_rfl_power(self) -> int | None:
         command = 'RR'
-        response = self._send_query(command).strip('RR')
+        response = self._send_query(command).strip(command)
         try:
             rfl_power = int(response)
             return rfl_power
@@ -295,7 +295,7 @@ class VRG:
 
     def read_abs_power(self) -> int | None:
         command = 'RB'
-        response = self._send_query(command).strip('RB')
+        response = self._send_query(command).strip(command)
         try:
             abs_power = int(response)
             return abs_power
@@ -308,7 +308,7 @@ class VRG:
 
     def read_status_byte(self) -> list[int]:
         command = 'GS'
-        response: str = self._send_query(command).strip('GS')
+        response: str = self._send_query(command).strip(command)
         # Check to make sure the response is actually the three char string
         if len(response) > 3:
             return [-1, -1, -1]
@@ -327,30 +327,40 @@ class VRG:
 
     def read_power_setting(self) -> int | None:
         command = 'RO'
-        response = self._send_query(command).strip('RO')
+        response = self._send_query(command).strip(command)
         try:
             power_setting = int(response)
             return power_setting
-        except Exception as e:
-            print(f'    Error converting power setting to int: {e}')
+        except TypeError as te:
+            print(f'    Error converting power setting to int: {te}')
 
     def read_freq_setting(self) -> float | None:
         command = 'RQ'
-        response = self._send_query(command).strip('RQ')
+        response = self._send_query(command).strip(command)
         try:
             # Multiply response by 1e-3 to convert to MHz
             freq_setting = float(response) * 1e-3
             return freq_setting
-        except Exception as e:
-            print(f'    Error converting freq setting to float: {e}')
+        except TypeError as te:
+            print(f'    Error converting freq setting to float: {te}')
 
-    def read_min_freq_setting(self) -> str:
+    def read_min_freq_setting(self) -> float | None:
         command = 'R1'
-        return self._send_query(command)
+        response = self._send_query(command).strip(command)
+        try:
+            min_freq = float(response) * 1e-3
+            return min_freq
+        except TypeError as te:
+            print(f'    Error converting min freq to float: {te}')
 
-    def read_max_freq_setting(self) -> str:
+    def read_max_freq_setting(self) -> float | None:
         command = 'R2'
-        return self._send_query(command)
+        response = self._send_query(command).strip(command)
+        try:
+            max_freq = float(response) * 1e-3
+            return max_freq
+        except TypeError as te:
+            print(f'    Error converting max freq to float: {te}')
 
 
 # Read command examples
