@@ -254,9 +254,6 @@ class VRG:
 
         Args:
             freq (int | float): frequency setting in MHz
-
-        Returns:
-            str: command string ("SFnnnnn")
         """
         if not isinstance(freq, int | float):
             raise TypeError(f'Expected an int or float, but got {type(freq).__name__}')
@@ -324,9 +321,21 @@ class VRG:
             status_list.append(int(char))
         return status_list
 
-    def read_status(self) -> str:
+    def read_status(self) -> list[int | list[int] | float]:
+        """
+        Read the status of the VRG. The status list includes:
+        [version number, status byte, 5V voltage, 12V voltage, main power volage, main power current, amp temperature, board temperature]
+
+        Returns:
+            list: List of statuses
+        """
         command = 'RT'
-        return self._send_query(command)
+        response: str = self._send_query(command)
+        response_list: list = response.split()
+        response_list[0] = int(float(response[0]))
+        response_list[1] = [int(digit) for digit in response[1]]
+        response_list = response_list[:2] + [float(item) for item in response_list[2:]]
+        return response_list
 
     ####################################################################################
     ########################### Read Settings Commands #################################
