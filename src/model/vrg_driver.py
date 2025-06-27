@@ -97,7 +97,7 @@ class VRG:
 
                 # Check for spammy or unsolicited output and send the command again
                 while 'target' in response:
-                    print('Received unexpected unsolicited output.')
+                    print(f'Received unexpected unsolicited output.\n{response = }')
                     self.instrument.write(query)
                     response = self.instrument.read()
 
