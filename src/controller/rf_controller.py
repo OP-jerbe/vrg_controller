@@ -328,7 +328,7 @@ class RFController:
         except TypeError as te:
             print(f'    TypeError: {te}')
         except Exception as e:
-            self.stop_bg_thread()
+            self.worker.stop_requested.emit()
             print(f'    BG THREAD STOPPED. Unexpected error updating UI: {e}')
 
     def _handle_exit(self) -> None:
