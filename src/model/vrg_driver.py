@@ -94,6 +94,13 @@ class VRG:
             try:
                 self.instrument.write(query)
                 response = self.instrument.read()
+
+                # Check for spammy or unsolicited output and send the command again
+                while 'target' in response:
+                    print('Received unexpected unsolicited output.')
+                    self.instrument.write(query)
+                    response = self.instrument.read()
+
             except Exception as e:
                 raise ConnectionError(f'Serial Communication Error: {e}')
 
