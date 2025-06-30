@@ -313,6 +313,10 @@ class RFController:
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('INT')
                 return interlock_bit
+            case 2:
+                print('    Interlock bit = 2 (HiT Warning - Enable Switch OFF)')
+                self.view.enable_rf_btn.setText('High Temp')
+                return interlock_bit
             case 4:
                 print('    Interlock bit = 4 (OK - Enable Switch ON)')
                 self.view.enable_rf_btn.setEnabled(True)
@@ -321,10 +325,14 @@ class RFController:
                     self.view.enable_rf_btn.setChecked(True)
                 return interlock_bit
             case 5:
-                print('    Interlock bit = 5 (interlocked - Enable Swith ON)')
+                print('    Interlock bit = 5 (interlocked - Enable Switch ON)')
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('INT')
+                return interlock_bit
+            case 6:
+                print('    Interlock bit = 6 (HiT Warning - Enable Switch ON)')
+                self.view.enable_rf_btn.setText('High Temp')
                 return interlock_bit
             case _:
                 print(f'    Unexpected bit:  {interlock_bit}')
