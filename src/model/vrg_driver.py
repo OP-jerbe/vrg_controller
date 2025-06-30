@@ -313,9 +313,6 @@ class VRG:
     def read_status_byte(self) -> list[int]:
         command = 'GS'
         response: str = self._send_query(command).strip(command)
-        # Check to make sure the response is actually the three char string
-        if len(response) > 3:
-            return [-1, -1, -1]
         status_list: list[int] = []
         for char in response:
             status_list.append(int(char))
