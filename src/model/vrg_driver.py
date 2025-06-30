@@ -97,12 +97,18 @@ class VRG:
 
                 # Check for spammy or unsolicited output and send the command again
                 while 'target' in response:
-                    print(f'Received unexpected unsolicited output.\n{response = }')
+                    print(
+                        f'    Received unexpected unsolicited output.\n    {query = }\n    {response = }'
+                    )
                     self.instrument.write(query)
                     response = self.instrument.read()
 
+            except ConnectionError as ce:
+                print(f'Serial Communication Error: {ce}')
+                raise
             except Exception as e:
-                raise ConnectionError(f'Serial Communication Error: {e}')
+                print(f'Unexpected Error sending query: {e}')
+                raise
 
         print(f'Query: "{query}"\nResponse: "{response}"')
         return response
@@ -281,7 +287,7 @@ class VRG:
 
     def read_fwd_power(self) -> int | None:
         command = 'RF'
-        response = self._send_query(command).strip(command)
+        response = self._send_query(command).replace(command, '').strip()
         try:
             fwd_power = int(float(response))
             return fwd_power
@@ -290,7 +296,7 @@ class VRG:
 
     def read_rfl_power(self) -> int | None:
         command = 'RR'
-        response = self._send_query(command).strip(command)
+        response = self._send_query(command).replace(command, '').strip()
         try:
             rfl_power = int(float(response))
             return rfl_power
@@ -299,7 +305,7 @@ class VRG:
 
     def read_abs_power(self) -> int | None:
         command = 'RB'
-        response = self._send_query(command).strip(command)
+        response = self._send_query(command).replace(command, '').strip()
         try:
             abs_power = int(float(response))
             return abs_power
@@ -310,13 +316,13 @@ class VRG:
         command = 'RI'
         return self._send_query(command)
 
-    def read_status_byte(self) -> list[int]:
+    def read_status_byte(self) -> tuple[int, ...]:
         command = 'GS'
-        response: str = self._send_query(command).strip(command)
+        response: str = self._send_query(command).replace(command, '').strip()
         status_list: list[int] = []
         for char in response:
             status_list.append(int(char))
-        return status_list
+        return tuple(status_list)
 
     def read_status(self) -> list[int | list[int] | float]:
         """
@@ -340,7 +346,7 @@ class VRG:
 
     def read_power_setting(self) -> int | None:
         command = 'RO'
-        response = self._send_query(command).strip(command)
+        response = self._send_query(command).replace(command, '').strip()
         try:
             power_setting = int(float(response))
             return power_setting
@@ -349,7 +355,7 @@ class VRG:
 
     def read_freq_setting(self) -> float | None:
         command = 'RQ'
-        response = self._send_query(command).strip(command)
+        response = self._send_query(command).replace(command, '').strip()
         try:
             # Multiply response by 1e-3 to convert to MHz
             freq_setting = float(response) * 1e-3
@@ -359,7 +365,7 @@ class VRG:
 
     def read_min_freq_setting(self) -> float | None:
         command = 'R1'
-        response = self._send_query(command).strip(command)
+        response = self._send_query(command).replace(command, '').strip()
         try:
             min_freq = float(response) * 1e-3
             return min_freq
@@ -368,7 +374,7 @@ class VRG:
 
     def read_max_freq_setting(self) -> float | None:
         command = 'R2'
-        response = self._send_query(command).strip(command)
+        response = self._send_query(command).replace(command, '').strip()
         try:
             max_freq = float(response) * 1e-3
             return max_freq
