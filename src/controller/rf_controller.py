@@ -62,6 +62,35 @@ class RFController:
         self.worker_thread.quit()
         self.worker_thread.wait()  # Blocks until thread exits
 
+    def _handle_update_ui(self) -> None:
+        """
+        Called every second by Worker to update view with model data.
+        """
+        try:
+            self._check_interlock()
+
+            # Get the readings from the RF generator
+            power_setting: int | None = self.model.read_power_setting()
+            freq_setting: float | None = self.model.read_freq_setting()
+            abs_power: int | None = self.model.read_abs_power()
+            fwd_power: int | None = self.model.read_fwd_power()
+            rfl_power: int | None = self.model.read_rfl_power()
+
+            # Set the display values in the GUI
+            if not self.view.power_le.hasFocus():
+                self.view.power_le.setText(f'{power_setting:.0f}')
+            if not self.view.freq_le.hasFocus():
+                self.view.freq_le.setText(f'{freq_setting:.2f}')
+            self.view.abs_power_display_label.setText(f'{abs_power:.0f} W')
+            self.view.fwd_power_display_label.setText(f'{fwd_power:.0f} W')
+            self.view.rfl_power_display_label.setText(f'{rfl_power:.0f} W')
+            self.view.freq_display_label.setText(f'{freq_setting:.2f} MHz')
+        except TypeError as te:
+            print(f'    TypeError: {te}')
+        except Exception as e:
+            self.worker.stop_requested.emit()
+            print(f'    BG THREAD STOPPED. Unexpected error updating UI: {e}')
+
     ####################################################################################
     ##############################   STATE CHECKERS    #################################
     ####################################################################################
@@ -301,35 +330,6 @@ class RFController:
             self.model.set_freq(freq)
         except Exception as e:
             print(f'    Error setting frequency: {e}')
-
-    def _handle_update_ui(self) -> None:
-        """
-        Called every second by Worker to update view with model data.
-        """
-        try:
-            self._check_interlock()
-
-            # Get the readings from the RF generator
-            power_setting: int | None = self.model.read_power_setting()
-            freq_setting: float | None = self.model.read_freq_setting()
-            abs_power: int | None = self.model.read_abs_power()
-            fwd_power: int | None = self.model.read_fwd_power()
-            rfl_power: int | None = self.model.read_rfl_power()
-
-            # Set the display values in the GUI
-            if not self.view.power_le.hasFocus():
-                self.view.power_le.setText(f'{power_setting:.0f}')
-            if not self.view.freq_le.hasFocus():
-                self.view.freq_le.setText(f'{freq_setting:.2f}')
-            self.view.abs_power_display_label.setText(f'{abs_power:.0f} W')
-            self.view.fwd_power_display_label.setText(f'{fwd_power:.0f} W')
-            self.view.rfl_power_display_label.setText(f'{rfl_power:.0f} W')
-            self.view.freq_display_label.setText(f'{freq_setting:.2f} MHz')
-        except TypeError as te:
-            print(f'    TypeError: {te}')
-        except Exception as e:
-            self.worker.stop_requested.emit()
-            print(f'    BG THREAD STOPPED. Unexpected error updating UI: {e}')
 
     def _handle_exit(self) -> None:
         """
