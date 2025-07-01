@@ -34,7 +34,7 @@ class Worker(QObject):
     def on_timeout(self) -> None:
         try:
             data: dict[str, int | float | None] = {
-                'interlock_bit': self.model.read_status_byte()[-1],
+                'status_num': self.model.read_status_byte(),
                 'power_setting': self.model.read_power_setting(),
                 'freq_setting': self.model.read_freq_setting(),
                 'fwd_power': self.model.read_fwd_power(),
