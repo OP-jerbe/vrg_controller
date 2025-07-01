@@ -207,8 +207,10 @@ class RFController:
         try:
             if self.view.enable_rf_btn.isChecked():
                 self.model.enable_rf()
+                self.view.enable_rf_btn.setText('RF On')
             else:
                 self.model.disable_rf()
+                self.view.enable_rf_btn.setText('RF Off')
         except Exception as e:
             print(f'    Error enabling/disabling RF: {e}')
 
@@ -219,10 +221,9 @@ class RFController:
         print('Autotune Clicked.')
         try:
             self.model.autotune()
-            # might need a half second pause here
             freq: float | None = self.model.read_freq_setting()
             self.view.freq_le.setText(f'{freq:.2f}')
-            self.view.freq_display_label.setText(f'{freq:.2f}')
+            self.view.freq_display_label.setText(f'{freq:.2f} MHz')
         except Exception as e:
             print(f'    Error Autotuning: {e}')
 
@@ -270,24 +271,6 @@ class RFController:
     ##############################   STATE CHECKERS    #################################
     ####################################################################################
 
-    # def _read_interlock_bit(self) -> int:
-    #     """
-    #     Gets the interlock bit from the status byte.
-
-    #     Returns: int\n
-    #         `-1` if an error occurs.
-    #         `0` if interlock OK and enable switch is off.
-    #         `1` if interlock NOK and enable switch is off.
-    #         `4` if interlock OK and enable switch is on.
-    #         `5` if interlock NOK and enable switch is on.
-    #     """
-    #     try:
-    #         interlock_bit: int = self.model.read_status_byte()[-1]
-    #         return interlock_bit
-    #     except Exception as e:
-    #         print(f'    Error reading interlock bit: {e}')
-    #         return -1
-
     def _set_enable_rf_btn_state(
         self, interlock_bit: int, abs_power: int | None
     ) -> int:
@@ -304,8 +287,8 @@ class RFController:
             case 0:
                 print('    Interlock bit = 0 (OK - Enable Switch OFF)')
                 self.view.enable_rf_btn.setChecked(False)
+                self.view.enable_rf_btn.setText('RF Off')
                 self.view.enable_rf_btn.setEnabled(True)
-                self.view.enable_rf_btn.setText('Enable RF')
                 return interlock_bit
             case 1:
                 print('    Interlock bit = 1 (interlocked - Enable Switch OFF)')
@@ -320,15 +303,15 @@ class RFController:
             case 4:
                 print('    Interlock bit = 4 (OK - Enable Switch ON)')
                 self.view.enable_rf_btn.setEnabled(True)
-                self.view.enable_rf_btn.setText('Enable RF')
                 if abs_power is not None and abs_power > 0:
                     self.view.enable_rf_btn.setChecked(True)
+                    self.view.enable_rf_btn.setText('RF On')
                 return interlock_bit
             case 5:
                 print('    Interlock bit = 5 (interlocked - Enable Switch ON)')
                 self.view.enable_rf_btn.setChecked(False)
-                self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('INT')
+                self.view.enable_rf_btn.setEnabled(False)
                 return interlock_bit
             case 6:
                 print('    Interlock bit = 6 (HiT Warning - Enable Switch ON)')
@@ -337,6 +320,6 @@ class RFController:
             case _:
                 print(f'    Unexpected bit:  {interlock_bit}')
                 self.view.enable_rf_btn.setChecked(False)
-                self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('Unk Error')
+                self.view.enable_rf_btn.setEnabled(False)
                 return interlock_bit

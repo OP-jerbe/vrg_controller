@@ -107,7 +107,7 @@ class MainWindow(QMainWindow):
         self.freq_le = FreqLineEdit(placeholderText='Input Frequency Setting')
 
         # Create the RF enable/disable button
-        self.enable_rf_btn = QPushButton('Enable RF')
+        self.enable_rf_btn = QPushButton('RF Off')
         self.enable_rf_btn.setCheckable(True)
 
         # Create the autotune button
