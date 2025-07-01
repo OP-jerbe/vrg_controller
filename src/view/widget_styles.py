@@ -32,3 +32,27 @@ def line_edit_style() -> LiteralString:
             color: #88ff00;
         }
         """
+
+
+def warning_btn_style() -> LiteralString:
+    """
+    Set the color of the text in the Enable RF button to be yellow when there is a
+    warning such as `HiT`.
+    """
+    return """
+        QPushButton {
+            color: #f9ff47
+        }
+    """
+
+
+def default_btn_style() -> LiteralString:
+    """
+    Set the color of th text in the Enable RF button to the default green when
+    everything is OK.
+    """
+    return """
+        QPushButton {
+            color: #8bc34a
+        }
+    """
