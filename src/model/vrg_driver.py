@@ -316,29 +316,25 @@ class VRG:
         command = 'RI'
         return self._send_query(command)
 
-    def read_status_byte(self) -> tuple[int, ...]:
+    def read_status_byte(self) -> int:
         command = 'GS'
         response: str = self._send_query(command).replace(command, '').strip()
-        status_list: list[int] = []
-        for char in response:
-            status_list.append(int(char))
-        return tuple(status_list)
+        status_byte = int(float(response))
+        return status_byte
 
     def read_status(self) -> list[float | list[int]]:
         """
         Read the status of the VRG. The status list includes:
         [version number, status byte, 5V voltage, 12V voltage, main power volage, main power current, amp temperature, board temperature]
-        [float           , list[int]  , float     , float      , float            , float             , float          , float            ]
+        [float         , int        , float     , float      , float            , float             , float          , float            ]
         Returns:
             list: List of statuses
         """
         command = 'RT'
         response: str = self._send_query(command)
         status: list = response.split()
-        print(f'{status = }')
-        status[0] = float(status[0])
-        status[1] = [int(digit) for digit in status[1]]
-        status = status[:2] + [float(item) for item in status[2:]]
+        status = [float(item) for item in status]
+        status[1] = int(status[1])
         return status
 
     ####################################################################################
