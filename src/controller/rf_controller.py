@@ -66,7 +66,7 @@ class RFController:
         """
         Called every second by Worker to update view with model data.
         """
-        interlock_bit = data['interlock_bit']
+        status_num = data['status_num']
         power_setting = data['power_setting']
         freq_setting = data['freq_setting']
         fwd_power = data['fwd_power']
@@ -74,11 +74,11 @@ class RFController:
         abs_power = data['abs_power']
 
         # Check the interlock bit and set the state of the Enable RF button
-        if isinstance(interlock_bit, int) and not isinstance(abs_power, float):
-            self._set_enable_rf_btn_state(interlock_bit, abs_power)
+        if isinstance(status_num, int) and not isinstance(abs_power, float):
+            self._set_enable_rf_btn_state(status_num, abs_power)
 
         # Set displays to nonsense and return if there was an error.
-        if interlock_bit == -1:
+        if status_num == -1:
             self.view.abs_power_display_label.setText('### W')
             self.view.fwd_power_display_label.setText('### W')
             self.view.rfl_power_display_label.setText('### W')
@@ -271,73 +271,96 @@ class RFController:
     ##############################   STATE CHECKERS    #################################
     ####################################################################################
 
-    def _set_enable_rf_btn_state(
-        self, interlock_bit: int, abs_power: int | None
-    ) -> int:
+    def _set_enable_rf_btn_state(self, status_num: int, abs_power: int | None) -> int:
         """
         Enables or disables the Enable RF button based on the interlock status.
+        Matches the case of status bits.
+        status_bit[0] == not currently used - (Always 0)
+        status_bit[1] == Enable Switch OFF / ON - (0 / 1)
+        status_bit[2] == Temp OK / Over Temp -  (0 / 1)
+        status_bit[3] == Not Interlocked / Interlocked - (0 / 1)
         """
-        match interlock_bit:
-            case -1:
-                print('    Interlock bit = -1 (error)')
-                self.view.enable_rf_btn.setChecked(False)
-                self.view.enable_rf_btn.setEnabled(False)
-                self.view.enable_rf_btn.setText('COM Error')
-                return interlock_bit
-            case 0:
-                print('    Interlock bit = 0 (OK - Enable Switch OFF)')
+        if status_num == -1:  # error occured
+            print('    Interlock_bit = -1 (error)')
+            self.view.enable_rf_btn.setChecked(False)
+            self.view.enable_rf_btn.setEnabled(False)
+            self.view.enable_rf_btn.setText('COM Error')
+            return status_num
+
+        status_bits: list[int] = self._convert_num_to_bits(status_num)
+
+        match status_bits:
+            case [0, 0, 0, 0]:
+                print(
+                    '    status_bits = [0, 0, 0, 0] - Enable Switch OFF, Temp OK, Not Interlocked)'
+                )
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setText('RF Off')
                 self.view.enable_rf_btn.setEnabled(True)
-                return interlock_bit
-            case 1:
-                print('    Interlock bit = 1 (interlocked - Enable Switch OFF)')
-                self.view.enable_rf_btn.setChecked(False)
-                self.view.enable_rf_btn.setEnabled(False)
-                self.view.enable_rf_btn.setText('INT')
-                return interlock_bit
-            case 2:
-                print('    Interlock bit = 2 (HiT Warning - Enable Switch OFF)')
-                self.view.enable_rf_btn.setChecked(False)
-                self.view.enable_rf_btn.setEnabled(True)
-                self.view.enable_rf_btn.setText('High Temp')
-                return interlock_bit
-            case 3:
+                return status_num
+            case [0, 0, 0, 1]:
                 print(
-                    '    Interlock bit = 3 (HiT Warning and interlocked - Enable Switch OFF)'
+                    '    status_bits = [0, 0, 0, 1] - Enable Switch OFF, Temp OK, Interlocked'
                 )
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('INT')
-                return interlock_bit
-            case 4:
-                print('    Interlock bit = 4 (OK - Enable Switch ON)')
+                return status_num
+            case [0, 0, 1, 0]:
+                print(
+                    '    status_bits = [0, 0, 1, 0] - Enable Switch OFF, Over Temp, Not Interlocked'
+                )
+                self.view.enable_rf_btn.setChecked(False)
+                self.view.enable_rf_btn.setEnabled(True)
+                self.view.enable_rf_btn.setText('High Temp')
+                return status_num
+            case [0, 0, 1, 1]:
+                print(
+                    '    status_bits = [0, 0, 1, 1] - Enable Switch OFF, Over Temp, Interlocked'
+                )
+                self.view.enable_rf_btn.setChecked(False)
+                self.view.enable_rf_btn.setEnabled(False)
+                self.view.enable_rf_btn.setText('INT')
+                return status_num
+            case [0, 1, 0, 0]:
+                print(
+                    '    status_bit = [0, 1, 0, 0] - Enable Switch ON, Temp OK, Not Interlocked'
+                )
                 self.view.enable_rf_btn.setEnabled(True)
                 if abs_power is not None and abs_power > 0:
                     self.view.enable_rf_btn.setChecked(True)
                     self.view.enable_rf_btn.setText('RF On')
-                return interlock_bit
-            case 5:
-                print('    Interlock bit = 5 (interlocked - Enable Switch ON)')
+                return status_num
+            case [0, 1, 0, 1]:
+                print(
+                    '    status_bit = [0, 1, 0, 1] - Enable Switch ON, Temp OK, Interlocked'
+                )
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setText('INT')
                 self.view.enable_rf_btn.setEnabled(False)
-                return interlock_bit
-            case 6:
-                print('    Interlock bit = 6 (HiT Warning - Enable Switch ON)')
-                self.view.enable_rf_btn.setText('High Temp')
-                return interlock_bit
-            case 7:
+                return status_num
+            case [0, 1, 1, 0]:
                 print(
-                    '    Interlock bit = 7 (HiT Warning and interlocked - Enable Switch ON)'
+                    '    status_bit = [0, 1, 1, 0] - Enable Switch ON, Over Temp, Not Interlocked'
+                )
+                self.view.enable_rf_btn.setText('High Temp')
+                return status_num
+            case [0, 1, 1, 1]:
+                print(
+                    '    status_bit = [0, 1, 1, 1] - Enable Switch ON, Over Temp, Interlocked'
                 )
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('INT')
-                return interlock_bit
+                return status_num
             case _:
-                print(f'    Unexpected bit:  {interlock_bit}')
+                print(f'    Unexpected bit:  {status_num}')
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setText('Unk Error')
                 self.view.enable_rf_btn.setEnabled(False)
-                return interlock_bit
+                return status_num
+
+    def _convert_num_to_bits(self, num: int) -> list[int]:
+        num_as_byte: str = format(num, '04b')
+        bits: list[int] = [int(digit) for digit in num_as_byte]
+        return bits
