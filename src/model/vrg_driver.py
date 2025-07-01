@@ -324,21 +324,22 @@ class VRG:
             status_list.append(int(char))
         return tuple(status_list)
 
-    def read_status(self) -> list[int | list[int] | float]:
+    def read_status(self) -> list[float | list[int]]:
         """
         Read the status of the VRG. The status list includes:
         [version number, status byte, 5V voltage, 12V voltage, main power volage, main power current, amp temperature, board temperature]
-
+        [float           , list[int]  , float     , float      , float            , float             , float          , float            ]
         Returns:
             list: List of statuses
         """
         command = 'RT'
         response: str = self._send_query(command)
-        response_list: list = response.split()
-        response_list[0] = int(float(response[0]))
-        response_list[1] = [int(digit) for digit in response[1]]
-        response_list = response_list[:2] + [float(item) for item in response_list[2:]]
-        return response_list
+        status: list = response.split()
+        print(f'{status = }')
+        status[0] = float(status[0])
+        status[1] = [int(digit) for digit in status[1]]
+        status = status[:2] + [float(item) for item in status[2:]]
+        return status
 
     ####################################################################################
     ########################### Read Settings Commands #################################
