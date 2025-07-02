@@ -30,7 +30,8 @@ class RFController:
         self._init_control()
 
         # Start the background thread updates
-        self.worker_thread.start()
+        if self.worker_thread is not None:
+            self.worker_thread.start()
 
     ####################################################################################
     #############################    BACKGROUND THREAD    ##############################
@@ -42,6 +43,7 @@ class RFController:
         background thread and connect Signals to their handler methods.
         """
         self.worker_thread = QThread()
+        self.worker_thread.setObjectName('worker_thread')
         self.worker = Worker(self.model)
         self.worker.moveToThread(self.worker_thread)
         self.worker_thread.started.connect(self.worker.start)
@@ -49,18 +51,18 @@ class RFController:
         self.worker.stopped.connect(self._on_worker_stopped)
 
     def _on_worker_stopped(self) -> None:
-        self.stop_bg_thread()
+        """Cleanup after the worker has stopped."""
+        print('Worker has stopped. Cleaning up thread.')
+        if self.worker_thread is not None:
+            self.worker_thread.quit()
+            self.worker_thread.wait()
+        self.worker_thread = None
+        self.worker = None
 
     def stop_bg_thread(self) -> None:
-        # Emit signal to request worker to stop
-        self.worker.stop_requested.emit()
-
-        # Give control back to event loop so that stop() runs in the worker thread
-        QCoreApplication.processEvents()
-
-        # Stop the thread
-        self.worker_thread.quit()
-        self.worker_thread.wait()  # Blocks until thread exits
+        """Request the worker to stop gracefully."""
+        if self.worker:
+            self.worker.stop_requested.emit()
 
     def _handle_update_ui(self, data: dict[str, int | float | None]) -> None:
         """
@@ -175,8 +177,9 @@ class RFController:
             self._init_control()
             self.view.autotune_btn.setEnabled(True)
             self.model.flush_input_buffer()
-            if not self.worker_thread.isRunning():
-                self.worker_thread.start()
+            if self.worker_thread is not None:
+                if not self.worker_thread.isRunning():
+                    self.worker_thread.start()
         except Exception as e:
             print(f'    Error trying to connect to RF generator: {e}')
 
@@ -272,21 +275,20 @@ class RFController:
     ##############################   STATE CHECKERS    #################################
     ####################################################################################
 
-    def _set_enable_rf_btn_state(self, status_num: int, abs_power: int | None) -> int:
+    def _set_enable_rf_btn_state(self, status_num: int, abs_power: int | None) -> None:
         """
         Enables or disables the Enable RF button based on the interlock status.
         Matches the case of status bits.
-        status_bit[0] == not currently used - (Always 0)
-        status_bit[1] == Enable Switch OFF / ON - (0 / 1)
-        status_bit[2] == Temp OK / Over Temp -  (0 / 1)
-        status_bit[3] == Not Interlocked / Interlocked - (0 / 1)
+        status_num[0] == not currently used - (Always 0)
+        status_num[1] == Enable Switch OFF / ON - (0 / 1)
+        status_num[2] == Temp OK / Over Temp -  (0 / 1)
+        status_num[3] == Not Interlocked / Interlocked - (0 / 1)
         """
         if status_num == -1:  # error occured
-            print('    Interlock_bit = -1 (error)')
+            print('status_num = -1 (error)')
             self.view.enable_rf_btn.setChecked(False)
             self.view.enable_rf_btn.setEnabled(False)
             self.view.enable_rf_btn.setText('COM Error')
-            return status_num
 
         status_bits: list[int] = convert_num_to_bits(status_num)
         print(f'    {status_bits}')
@@ -294,70 +296,61 @@ class RFController:
         match status_bits:
             case [0, 0, 0, 0]:
                 print(
-                    '    status_bits = [0, 0, 0, 0] - Enable Switch OFF, Temp OK, Not Interlocked)'
+                    'status_bits = [0, 0, 0, 0] - Enable Switch OFF, Temp OK, Not Interlocked)'
                 )
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setText('RF Off')
                 self.view.enable_rf_btn.setEnabled(True)
-                return status_num
             case [0, 0, 0, 1]:
                 print(
-                    '    status_bits = [0, 0, 0, 1] - Enable Switch OFF, Temp OK, Interlocked'
+                    'status_bits = [0, 0, 0, 1] - Enable Switch OFF, Temp OK, Interlocked'
                 )
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setText('INT')
                 self.view.enable_rf_btn.setEnabled(False)
-                return status_num
             case [0, 0, 1, 0]:
                 print(
-                    '    status_bits = [0, 0, 1, 0] - Enable Switch OFF, Over Temp, Not Interlocked'
+                    'status_bits = [0, 0, 1, 0] - Enable Switch OFF, Over Temp, Not Interlocked'
                 )
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(True)
                 self.view.enable_rf_btn.setText('High Temp')
-                return status_num
             case [0, 0, 1, 1]:
                 print(
-                    '    status_bits = [0, 0, 1, 1] - Enable Switch OFF, Over Temp, Interlocked'
+                    'status_bits = [0, 0, 1, 1] - Enable Switch OFF, Over Temp, Interlocked'
                 )
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('INT')
-                return status_num
             case [0, 1, 0, 0]:
                 print(
-                    '    status_bit = [0, 1, 0, 0] - Enable Switch ON, Temp OK, Not Interlocked'
+                    'status_bit = [0, 1, 0, 0] - Enable Switch ON, Temp OK, Not Interlocked'
                 )
                 self.view.enable_rf_btn.setEnabled(True)
                 if abs_power is not None and abs_power > 0:
                     self.view.enable_rf_btn.setChecked(True)
                     self.view.enable_rf_btn.setText('RF On')
-                return status_num
             case [0, 1, 0, 1]:
                 print(
-                    '    status_bit = [0, 1, 0, 1] - Enable Switch ON, Temp OK, Interlocked'
+                    'status_bit = [0, 1, 0, 1] - Enable Switch ON, Temp OK, Interlocked'
                 )
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setText('INT')
                 self.view.enable_rf_btn.setEnabled(False)
-                return status_num
             case [0, 1, 1, 0]:
                 print(
-                    '    status_bit = [0, 1, 1, 0] - Enable Switch ON, Over Temp, Not Interlocked'
+                    'status_bit = [0, 1, 1, 0] - Enable Switch ON, Over Temp, Not Interlocked'
                 )
                 self.view.enable_rf_btn.setText('High Temp')
-                return status_num
             case [0, 1, 1, 1]:
                 print(
-                    '    status_bit = [0, 1, 1, 1] - Enable Switch ON, Over Temp, Interlocked'
+                    'status_bit = [0, 1, 1, 1] - Enable Switch ON, Over Temp, Interlocked'
                 )
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('INT')
-                return status_num
             case _:
-                print(f'    Unexpected bit:  {status_num}')
+                print(f'Unexpected status_bit list:  {status_bits}')
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setText('Unk Error')
                 self.view.enable_rf_btn.setEnabled(False)
-                return status_num
