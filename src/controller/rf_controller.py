@@ -73,8 +73,8 @@ class RFController:
         rfl_power = data['rfl_power']
         abs_power = data['abs_power']
 
-        # Check the interlock bit and set the state of the Enable RF button
-        if isinstance(status_num, int) and not isinstance(abs_power, float):
+        # Check the status byte and set the state of the Enable RF button
+        if isinstance(status_num, int) and isinstance(abs_power, int):
             self._set_enable_rf_btn_state(status_num, abs_power)
 
         # Set displays to nonsense and return if there was an error.
@@ -175,7 +175,8 @@ class RFController:
             self._init_control()
             self.view.autotune_btn.setEnabled(True)
             self.model.flush_input_buffer()
-            self.worker_thread.start()
+            if not self.worker_thread.isRunning():
+                self.worker_thread.start()
         except Exception as e:
             print(f'    Error trying to connect to RF generator: {e}')
 
@@ -288,6 +289,7 @@ class RFController:
             return status_num
 
         status_bits: list[int] = self._convert_num_to_bits(status_num)
+        print(f'    {status_bits}')
 
         match status_bits:
             case [0, 0, 0, 0]:
@@ -303,8 +305,8 @@ class RFController:
                     '    status_bits = [0, 0, 0, 1] - Enable Switch OFF, Temp OK, Interlocked'
                 )
                 self.view.enable_rf_btn.setChecked(False)
-                self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('INT')
+                self.view.enable_rf_btn.setEnabled(False)
                 return status_num
             case [0, 0, 1, 0]:
                 print(
