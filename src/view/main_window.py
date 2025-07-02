@@ -92,7 +92,7 @@ class MainWindow(QMainWindow):
     def _create_widgets(self) -> None:
         # Create the QLabels
         self.power_setting_label = QLabel('Power (W)')
-        self.freq_setting_label = QLabel('Frequncy (MHz)')
+        self.freq_setting_label = QLabel('Frequency (MHz)')
         self.abs_power_label = QLabel('Absorbed Power')
         self.abs_power_display_label = QLabel('0 W')
         self.fwd_power_label = QLabel('Forward Power')
