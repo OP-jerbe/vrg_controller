@@ -317,6 +317,17 @@ class VRG:
         return self._send_query(command)
 
     def read_status_byte(self) -> int:
+        """
+        Get the status byte from the VRG. For example, if theenable switch is off, the
+        over temp warning is not on, and the interlock is not tripped, the byte
+        generated will be `000` so the integer returned will be `0`. If the enable
+        switch is on, the over temp warning is on, and the interlock is tripped, the
+        byte generated will be `111`, so the integer returned will be `7`.
+
+        Returns:
+            int: a number that corresponds the bitwise integer built from the position of
+            the enable switch, over temp state, and interlock state.
+        """
         command = 'GS'
         response: str = self._send_query(command).replace(command, '').strip()
         status_byte = int(float(response))
