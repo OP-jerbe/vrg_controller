@@ -320,9 +320,9 @@ class VRG:
         """
         Get the status byte from the VRG. For example, if theenable switch is off, the
         over temp warning is not on, and the interlock is not tripped, the byte
-        generated will be `000` so the integer returned will be `0`. If the enable
+        generated will be `00000000` so the integer returned will be `0`. If the enable
         switch is on, the over temp warning is on, and the interlock is tripped, the
-        byte generated will be `111`, so the integer returned will be `7`.
+        byte generated will be `00000111`, so the integer returned will be `7`.
 
         Returns:
             int: a number that corresponds the bitwise integer built from the position of
