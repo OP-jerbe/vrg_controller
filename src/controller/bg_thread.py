@@ -1,6 +1,5 @@
-import traceback
-
 from PySide6.QtCore import QObject, Qt, QTimer, Signal
+from serial import SerialException
 
 from ..model.vrg_driver import VRG
 
@@ -11,6 +10,7 @@ class Worker(QObject):
     """
 
     updated = Signal(dict)
+    disconnected = Signal()
     stop_requested = Signal()
     stopped = Signal()
 
@@ -19,6 +19,7 @@ class Worker(QObject):
         self.model = model
         self.timer = None
         self.stop_requested.connect(self.stop, Qt.ConnectionType.QueuedConnection)
+        self.disconnected.connect(self.stop, Qt.ConnectionType.QueuedConnection)
 
     def start(self) -> None:
         self.timer = QTimer(self)
@@ -27,8 +28,13 @@ class Worker(QObject):
         self.timer.start()
 
     def stop(self) -> None:
-        if self.timer and self.timer.isActive():
-            self.timer.stop()
+        if self.timer:
+            if self.timer.isActive():
+                self.timer.stop()
+                print('QTimer Stopped...')
+            self.timer.deleteLater()
+            self.timer = None
+        print('Worker is stopping...')
         self.stopped.emit()
 
     def on_timeout(self) -> None:
@@ -41,15 +47,18 @@ class Worker(QObject):
                 'rfl_power': self.model.read_rfl_power(),
                 'abs_power': self.model.read_abs_power(),
             }
-        except Exception as e:
-            print(f'    Error polling data: {e}')
-            print(f'    Traceback :{traceback.print_exc()}')
+            self.updated.emit(data)
+        except SerialException as se:
+            print(f'    Error polling data: {se}')
             data = {
-                'interlock_bit': -1,
+                'status_num': -1,
                 'power_setting': None,
                 'freq_setting': None,
                 'fwd_power': None,
                 'rfl_power': None,
                 'abs_power': None,
             }
-        self.updated.emit(data)
+            self.disconnected.emit()
+        except Exception as e:
+            print(f'UNEXPECTED ERROR!!!: {e}')
+            raise
