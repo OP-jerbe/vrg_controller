@@ -37,3 +37,9 @@ def get_ini_info() -> tuple[str | None, tuple[str, str, str]]:
     rf_settings = get_rf_settings(config_data)
 
     return rf_com_port, rf_settings
+
+
+def convert_num_to_bits(num: int) -> list[int]:
+    num_as_byte: str = format(num, '04b')
+    bits: list[int] = [int(digit) for digit in num_as_byte]
+    return bits

@@ -1,6 +1,6 @@
 from PySide6.QtCore import QCoreApplication, QThread
 
-from helpers.helpers import get_ini_info
+from helpers.helpers import convert_num_to_bits, get_ini_info
 
 from ..model.vrg_driver import VRG
 from ..view.main_window import MainWindow
@@ -288,7 +288,7 @@ class RFController:
             self.view.enable_rf_btn.setText('COM Error')
             return status_num
 
-        status_bits: list[int] = self._convert_num_to_bits(status_num)
+        status_bits: list[int] = convert_num_to_bits(status_num)
         print(f'    {status_bits}')
 
         match status_bits:
@@ -361,8 +361,3 @@ class RFController:
                 self.view.enable_rf_btn.setText('Unk Error')
                 self.view.enable_rf_btn.setEnabled(False)
                 return status_num
-
-    def _convert_num_to_bits(self, num: int) -> list[int]:
-        num_as_byte: str = format(num, '04b')
-        bits: list[int] = [int(digit) for digit in num_as_byte]
-        return bits
