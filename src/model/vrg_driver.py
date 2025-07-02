@@ -153,6 +153,10 @@ class VRG:
             return
 
         with self.lock:
+            # Change the timeout length just for this method call.
+            original_timeout = self.instrument.timeout
+            self.instrument.timeout = 500
+
             try:
                 while True:
                     self.instrument.read_bytes(1024, break_on_termchar=False)
@@ -160,6 +164,9 @@ class VRG:
                 # Expected when no more data is available
                 if e.error_code != pyvisa.constants.VI_ERROR_TMO:
                     raise
+            finally:
+                # Now change the timeout length back to the default.
+                self.instrument.timeout = original_timeout
 
     ####################################################################################
     ################################ ATTN Command ######################################
