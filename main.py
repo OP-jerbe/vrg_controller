@@ -53,11 +53,11 @@ def run_app() -> NoReturn:
     # Set up the model-view-controller design pattern
     model = VRG(resource_name=resource_name, freq_range=freq_range, max_power=max_power)
     view = MainWindow(version)
-    controller = RFController(model, view)
+    controller = RFController(model, view)  # noqa: F841
 
     view.show()
 
-    app.aboutToQuit.connect(controller.stop_bg_thread)
+    app.aboutToQuit.connect(controller.polling_timer.stop)
     sys.exit(app.exec())
 
 
