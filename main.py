@@ -57,7 +57,7 @@ def run_app() -> NoReturn:
 
     view.show()
 
-    app.aboutToQuit.connect(controller.polling_timer.stop)
+    app.aboutToQuit.connect(controller.shutdown)
     sys.exit(app.exec())
 
 

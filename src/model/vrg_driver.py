@@ -110,7 +110,7 @@ class VRG:
                 print(f'Unexpected Error sending query: {e}')
                 raise
 
-        print(f'Query: "{query}"\nResponse: "{response}"')
+        # print(f'Query: "{query}"\nResponse: "{response}"')
         return response
 
     def _send_command(self, command: str) -> None:
