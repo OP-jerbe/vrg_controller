@@ -1,26 +1,30 @@
-from PySide6.QtCore import QCoreApplication, QThread
+from PySide6.QtCore import QObject, QThreadPool, QTimer, Signal, Slot
+from serial import SerialException
 
 from helpers.helpers import convert_num_to_bits, get_ini_info
 
 from ..model.vrg_driver import VRG
 from ..view.main_window import MainWindow
-from .bg_thread import Worker
+from .polling_worker import PollingWorker
 
 
-class RFController:
+class RFController(QObject):
+    data_acquired = Signal(dict)
+
     def __init__(self, model: VRG, view: MainWindow) -> None:
+        super().__init__()
         self.model = model
         self.view = view
-        self.command_widgets = (
+        self.interactive_widgets = (
             self.view.power_le,
             self.view.freq_le,
             self.view.enable_rf_btn,
             self.view.autotune_btn,
         )
-        self._connect_events_to_handlers()
+        self.threadpool = QThreadPool()
+        self._create_polling_timer()
 
-        # Create the backgroud thread and worker to update GUI with readback values
-        self._create_bg_thread()
+        self._connect_events_to_handlers()
 
         # If there is not an instrument connected, disable the gui and return
         if not self.model.instrument:
@@ -29,41 +33,50 @@ class RFController:
 
         self._init_control()
 
-        # Start the background thread updates
-        if self.worker_thread is not None:
-            self.worker_thread.start()
-
     ####################################################################################
     #############################    BACKGROUND THREAD    ##############################
     ####################################################################################
 
-    def _create_bg_thread(self) -> None:
-        """
-        Create the background Qthread and Worker objects. Move the Worker to the
-        background thread and connect Signals to their handler methods.
-        """
-        self.worker_thread = QThread()
-        self.worker_thread.setObjectName('worker_thread')
-        self.worker = Worker(self.model)
-        self.worker.moveToThread(self.worker_thread)
-        self.worker_thread.started.connect(self.worker.start)
-        self.worker.updated.connect(self._handle_update_ui)
-        self.worker.stopped.connect(self._on_worker_stopped)
+    def _create_polling_timer(self) -> None:
+        self.polling_timer = QTimer(interval=1000)
+        self.polling_timer.timeout.connect(self._poll_vrg)
+        if self.model.instrument:
+            self.polling_timer.start()
 
-    def _on_worker_stopped(self) -> None:
-        """Cleanup after the worker has stopped."""
-        print('Worker has stopped. Cleaning up thread.')
-        if self.worker_thread is not None:
-            self.worker_thread.quit()
-            self.worker_thread.wait()
-        self.worker_thread = None
-        self.worker = None
+    def _get_vrg_data(self) -> None:
+        try:
+            data: dict[str, int | float | None] = {
+                'status_num': self.model.read_status_byte(),
+                'power_setting': self.model.read_power_setting(),
+                'freq_setting': self.model.read_freq_setting(),
+                'fwd_power': self.model.read_fwd_power(),
+                'rfl_power': self.model.read_rfl_power(),
+                'abs_power': self.model.read_abs_power(),
+            }
+            self.data_acquired.emit(data)
 
-    def stop_bg_thread(self) -> None:
-        """Request the worker to stop gracefully."""
-        if self.worker:
-            self.worker.stop_requested.emit()
+        except SerialException as se:
+            print(f'Error polling data: {se}')
+            data = {
+                'status_num': -1,
+                'power_setting': None,
+                'freq_setting': None,
+                'fwd_power': None,
+                'rfl_power': None,
+                'abs_power': None,
+            }
+            self.data_acquired.emit(data)
+            self.polling_timer.stop()
+        except Exception as e:
+            print(f'UNEXPECTED ERROR!!!: {e}')
+            raise
 
+    @Slot()
+    def _poll_vrg(self) -> None:
+        worker = PollingWorker(self._get_vrg_data)
+        self.threadpool.start(worker)
+
+    @Slot(dict)
     def _handle_update_ui(self, data: dict[str, int | float | None]) -> None:
         """
         Called every second by Worker to update view with model data.
@@ -118,14 +131,14 @@ class RFController:
         """
         Disable all widgets that send commands to the RF generator
         """
-        for widget in self.command_widgets:
+        for widget in self.interactive_widgets:
             widget.setEnabled(False)
 
     def _enable_gui(self) -> None:
         """
         Enable all widgets that send commands to the RF generator.
         """
-        for widget in self.command_widgets:
+        for widget in self.interactive_widgets:
             widget.setEnabled(True)
 
     ####################################################################################
@@ -137,6 +150,9 @@ class RFController:
         Connects the events of the widgets to the handler methods. Events include
         returnPressed, mouse clicks and
         """
+        # Connect signals to slots
+        self.data_acquired.connect(self._handle_update_ui)
+
         # Connect the QLineEdit events to their handlers
         self.view.power_le.returnPressed.connect(self._handle_power_le_returnPressed)
         self.view.freq_le.returnPressed.connect(self._handle_freq_le_returnPressed)
@@ -177,9 +193,6 @@ class RFController:
             self._init_control()
             self.view.autotune_btn.setEnabled(True)
             self.model.flush_input_buffer()
-            if self.worker_thread is not None:
-                if not self.worker_thread.isRunning():
-                    self.worker_thread.start()
         except Exception as e:
             print(f'    Error trying to connect to RF generator: {e}')
 
