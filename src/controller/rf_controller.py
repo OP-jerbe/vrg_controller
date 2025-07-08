@@ -193,14 +193,11 @@ class RFController(QObject):
         resource_name = rf_com_port
         if rf_com_port is not None:
             resource_name = f'ASRL{rf_com_port[-1]}::INSTR'
-        min_freq = float(rf_settings[0])
-        max_freq = float(rf_settings[1])
-        freq_range = (min_freq, max_freq)
-        max_power = int(rf_settings[2])
 
         # Connect to the RF generator
         try:
-            self.model = VRG(resource_name, freq_range=freq_range, max_power=max_power)
+            if resource_name is not None:
+                self.model.instrument = self.model.open_connection(resource_name)
             self.model.flush_input_buffer()
             self._init_control()
             self.polling_timer.start()
@@ -316,61 +313,36 @@ class RFController(QObject):
             self.view.enable_rf_btn.setText('COM Error')
 
         status_bits: list[int] = convert_num_to_bits(status_num)
-        # print(f'    {status_bits}')
 
         match status_bits:
             case [0, 0, 0, 0]:
-                # print(
-                #     'status_bits = [0, 0, 0, 0] - Enable Switch OFF, Temp OK, Not Interlocked)'
-                # )
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setText('RF Off')
                 self.view.enable_rf_btn.setEnabled(True)
             case [0, 0, 0, 1]:
-                # print(
-                #     'status_bits = [0, 0, 0, 1] - Enable Switch OFF, Temp OK, Interlocked'
-                # )
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setText('INT')
                 self.view.enable_rf_btn.setEnabled(False)
             case [0, 0, 1, 0]:
-                # print(
-                #     'status_bits = [0, 0, 1, 0] - Enable Switch OFF, Over Temp, Not Interlocked'
-                # )
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(True)
                 self.view.enable_rf_btn.setText('High Temp')
             case [0, 0, 1, 1]:
-                # print(
-                #     'status_bits = [0, 0, 1, 1] - Enable Switch OFF, Over Temp, Interlocked'
-                # )
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('INT')
             case [0, 1, 0, 0]:
-                # print(
-                #     'status_bit = [0, 1, 0, 0] - Enable Switch ON, Temp OK, Not Interlocked'
-                # )
                 self.view.enable_rf_btn.setEnabled(True)
                 if abs_power is not None and abs_power > 0:
                     self.view.enable_rf_btn.setChecked(True)
                     self.view.enable_rf_btn.setText('RF On')
             case [0, 1, 0, 1]:
-                # print(
-                #     'status_bit = [0, 1, 0, 1] - Enable Switch ON, Temp OK, Interlocked'
-                # )
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setText('INT')
                 self.view.enable_rf_btn.setEnabled(False)
             case [0, 1, 1, 0]:
-                # print(
-                #     'status_bit = [0, 1, 1, 0] - Enable Switch ON, Over Temp, Not Interlocked'
-                # )
                 self.view.enable_rf_btn.setText('High Temp')
             case [0, 1, 1, 1]:
-                # print(
-                #     'status_bit = [0, 1, 1, 1] - Enable Switch ON, Over Temp, Interlocked'
-                # )
                 self.view.enable_rf_btn.setChecked(False)
                 self.view.enable_rf_btn.setEnabled(False)
                 self.view.enable_rf_btn.setText('INT')
