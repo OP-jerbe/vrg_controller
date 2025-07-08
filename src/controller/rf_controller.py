@@ -1,4 +1,4 @@
-from PySide6.QtCore import QObject, QThreadPool, QTimer, Signal, Slot
+from PySide6.QtCore import QCoreApplication, QObject, QThreadPool, QTimer, Signal, Slot
 from serial import SerialException
 
 from helpers.helpers import convert_num_to_bits, get_ini_info
@@ -47,9 +47,6 @@ class RFController(QObject):
 
     def _get_vrg_data(self) -> None:
         try:
-            if not self.model.instrument:
-                print('Polling skipped: instrument is None (probably shutting down)')
-                return
             data: dict[str, int | float | None] = {
                 'status_num': self.model.read_status_byte(),
                 'power_setting': self.model.read_power_setting(),
@@ -355,3 +352,4 @@ class RFController(QObject):
     def shutdown(self) -> None:
         self.shutting_down = True
         self.polling_timer.stop()
+        QCoreApplication.processEvents()
