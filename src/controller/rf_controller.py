@@ -47,6 +47,9 @@ class RFController(QObject):
 
     def _get_vrg_data(self) -> None:
         try:
+            if not self.model.instrument:
+                print('Polling skipped: instrument is None (probably shutting down)')
+                return
             data: dict[str, int | float | None] = {
                 'status_num': self.model.read_status_byte(),
                 'power_setting': self.model.read_power_setting(),
