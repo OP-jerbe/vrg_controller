@@ -102,10 +102,11 @@ class RFController(QObject):
 
         # Set displays to nonsense and return if there was an error.
         if status_num == -1:
-            self.view.abs_power_display_label.setText('### W')
-            self.view.fwd_power_display_label.setText('### W')
-            self.view.rfl_power_display_label.setText('### W')
-            self.view.freq_display_label.setText('### MHz')
+            self.view.abs_power_display_label.setText('W')
+            self.view.fwd_power_display_label.setText('W')
+            self.view.rfl_power_display_label.setText('W')
+            self.view.freq_display_label.setText('MHz')
+            self._disable_gui()
             return
 
         # Set the display values in the GUI if there's no error
@@ -184,8 +185,7 @@ class RFController(QObject):
         print('Connect clicked')
         # Get ini info
         rf_com_port: str | None
-        rf_settings: tuple[str, str, str]
-        rf_com_port, rf_settings = get_ini_info()
+        rf_com_port, _ = get_ini_info()
 
         resource_name = rf_com_port
         if rf_com_port is not None:
@@ -197,6 +197,7 @@ class RFController(QObject):
                 self.model.instrument = self.model.open_connection(resource_name)
             self.model.flush_input_buffer()
             self._init_control()
+            self._enable_gui()
             self.polling_timer.start()
             self.view.autotune_btn.setEnabled(True)
         except Exception as e:
