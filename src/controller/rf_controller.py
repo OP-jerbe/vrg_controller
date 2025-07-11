@@ -69,9 +69,11 @@ class RFController(QObject):
             }
             self.data_acquired.emit(data)
             self.polling_timer.stop()
+
         except Exception as e:
             print(f'UNEXPECTED ERROR!!!: {e}')
             raise
+
         finally:
             self.polling_in_progress = False
 
@@ -156,8 +158,7 @@ class RFController(QObject):
 
     def _connect_events_to_handlers(self) -> None:
         """
-        Connects the events of the widgets to the handler methods. Events include
-        returnPressed, mouse clicks and
+        Connects the events of the widgets to the handler methods.
         """
         # Connect signals to slots
         self.data_acquired.connect(self._handle_update_ui)
