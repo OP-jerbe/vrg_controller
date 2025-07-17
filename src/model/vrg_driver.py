@@ -1,172 +1,119 @@
 from threading import Lock
-from typing import Optional, cast
+from typing import Optional
 
-import pyvisa
-import pyvisa.constants
-from pyvisa.resources import MessageBasedResource
+import serial
 
 
 class VRG:
     """
-    Class that implements the driver for the Oregon Physics Variable Frequency RF Generator (VRG).
-    The driver implements the following 23 commands:
-
-    ATTN COMMAND:
-    * !: ping the VRG (returns `"WAZOO!"`)
-
-    SET COMMANDS:
-    * DE: disable echo
-    * EE: enable echo
-    * ER: enable RF power
-    * DR: disable RF power
-    * PM0: set forward power mode
-    * PM1: set absorbed power mode
-    * SPnnnn: set RF power in watts
-    * S1nnnnn: set minimum allowable frequency setting
-    * S2nnnnn: set maximum allowable frequency setting
-    * SFnnnnn: set frequency in kHz
-    * TW: wide-band autotune
-    * TT: narrow-band autotune
-
-    READ STATE COMMANDS:
-    * RF: read forward power output
-    * RR: read reflected power
-    * RB: read absorbed power
-    * RI: read factory information (serial number, num of boots, run hours, enabled hours, mas RF temp, shutdowns)
-    * GS: read the status byte (RF on, overtemp, RF interlock error)
-    * RT: read status: (version num, status [binary bit field], 5V voltage, 12V voltage, main power voltage, main power current, op-amp current, board temp)
-
-    READ SETTINGS COMMANDS:
-    * RO: read power setting
-    * RQ: read frequency setting
-    * R1: read minimum allowable frequency setting
-    * R2: read maximum allowable frequency setting
+    Class that implements the driver for the Variable Frequency RF Generator (VRG),
+    using pyserial instead of pyvisa.
     """
 
     def __init__(
         self,
-        resource_name: Optional[str] = None,
-        instrument: Optional[MessageBasedResource] = None,
+        port: Optional[str] = None,
+        baudrate: int = 9600,
+        timeout: float = 1.0,
         freq_range: tuple[int | float, int | float] = (25, 42),
         max_power: int = 1000,
     ) -> None:
-        # Get the resource name and instrument
-        self.resource_name = resource_name
-        self.instrument = instrument
+        self.port_name = port
+        self.serial_port: Optional[serial.Serial] = None
 
-        # Use '@py' as the resource manager from pyvisa-py library (hidden import)
-        self.rm = pyvisa.ResourceManager('@py')
+        if self.port_name is not None:
+            self.serial_port = self.open_connection(self.port_name, baudrate, timeout)
 
-        # Make a connection to the instrument if a resource name was given
-        if self.instrument is None and self.resource_name is not None:
-            self.instrument = self.open_connection(self.resource_name)
-
-        # Create the threading lock object
         self.lock = Lock()
 
-        # Set the hard frequecy limit range in MHz
         self.min_freq_limit = freq_range[0]
         self.max_freq_limit = freq_range[1]
-
-        # Set the valid frequency setting range
         self.min_freq_setting = self.min_freq_limit
         self.max_freq_setting = self.max_freq_limit
-
-        # Set the maximum allowable power setting in Watts
         self.max_power_setting = max_power
 
-    def _send_query(self, query: str) -> str:
-        """
-        Send a command to the instrument and read the response.
+        self.read_termination = '\r'
+        self.write_termination = '\r'
 
-        Args:
-            query (str): query string to send to the VRG.
+    def open_connection(
+        self, port: str, baudrate: int, timeout: float
+    ) -> serial.Serial:
+        ser = serial.Serial(
+            port=port, baudrate=baudrate, timeout=timeout, write_timeout=timeout
+        )
+        self.serial_port = ser
+        return ser
 
-        Returns:
-            str: Response from the instrument
-        """
-        if not self.instrument:
+    @property
+    def is_connected(self) -> bool:
+        return self.serial_port is not None and self.serial_port.is_open
+
+    def _send_command(self, command: str) -> None:
+        if not self.serial_port or not self.serial_port.is_open:
             raise RuntimeError(
                 'Attempted to communicate with VRG, but no instrument is connected.'
             )
 
         with self.lock:
             try:
-                self.instrument.write(query)
-                response = self.instrument.read()
+                full_command = command + self.write_termination
+                self.serial_port.write(full_command.encode('utf-8'))
+            except Exception as e:
+                raise ConnectionError(f'Serial Communication Error: {e}')
 
-                # Check for spammy or unsolicited output and send the command again
+        print(f'Command: "{command.strip()}"')
+
+    def _send_query(self, query: str) -> str:
+        if not self.serial_port or not self.serial_port.is_open:
+            raise RuntimeError(
+                'Attempted to communicate with VRG, but no instrument is connected.'
+            )
+
+        with self.lock:
+            try:
+                full_query = query + self.write_termination
+                self.serial_port.reset_input_buffer()
+                self.serial_port.write(full_query.encode('utf-8'))
+                response = self._readline()
+
+                # Handle unsolicited output
                 while 'target' in response:
                     print(
                         f'    Received unexpected unsolicited output.\n    {query = }\n    {response = }'
                     )
-                    self.instrument.write(query)
-                    response = self.instrument.read()
+                    self.serial_port.reset_input_buffer()
+                    self.serial_port.write(full_query.encode('utf-8'))
+                    response = self._readline()
 
-            except ConnectionError as ce:
-                print(f'Serial Communication Error: {ce}')
-                raise
             except Exception as e:
                 print(f'Unexpected Error sending query: {e}')
                 raise
 
-        # print(f'Query: "{query}"\nResponse: "{response}"')
         return response
 
-    def _send_command(self, command: str) -> None:
+    def _readline(self) -> str:
         """
-        Send a command to the instrument.
-
-        Args:
-            command (str): Command string to send to the VRG.
-
-        Returns:
-            None
+        Read until the termination character is found.
         """
-        if not self.instrument:
-            raise RuntimeError(
-                'Attempted to communicate with VRG, but no instrument is connected.'
-            )
-
-        with self.lock:
-            try:
-                self.instrument.write(command)
-            except Exception as e:
-                raise ConnectionError(f'Serial Communication Error: {e}')
-
-        print(f'Command: "{command.strip("\n")}"')
-
-    def open_connection(self, resource_name: str) -> MessageBasedResource:
-        self.instrument = cast(
-            MessageBasedResource, self.rm.open_resource(resource_name)
-        )
-        self.instrument.read_termination = '\r'
-        self.instrument.write_termination = '\r'
-        return self.instrument
+        line = bytearray()
+        if self.serial_port:
+            while True:
+                char = self.serial_port.read(1)
+                if not char:
+                    break  # Timeout occurred
+                line += char
+                if char.decode('utf-8') == self.read_termination:
+                    break
+            return line.decode('utf-8').strip()
+        else:
+            return ''
 
     def flush_input_buffer(self) -> None:
-        """
-        Flush any unread data from the device's input buffer.
-        Useful if previous reads were incomplete or out of sync.
-        """
-        if not self.instrument:
+        if not self.serial_port or not self.serial_port.is_open:
             return
 
         with self.lock:
-            # Change the timeout length just for this method call.
-            original_timeout = self.instrument.timeout
-            self.instrument.timeout = 500
-
-            try:
-                while True:
-                    self.instrument.read_bytes(1024, break_on_termchar=False)
-            except pyvisa.errors.VisaIOError as e:
-                # Expected when no more data is available
-                if e.error_code != pyvisa.constants.VI_ERROR_TMO:
-                    raise
-            finally:
-                # Now change the timeout length back to the default.
-                self.instrument.timeout = original_timeout
+            self.serial_port.reset_input_buffer()
 
     ####################################################################################
     ################################ ATTN Command ######################################
@@ -244,7 +191,7 @@ class VRG:
 
     def set_max_freq(self, freq: int | float) -> None:
         """
-        Set the maximim frequency within the frequency limits (typically 25-42 MHz)
+        Set the maximum frequency within the frequency limits (typically 25-42 MHz)
 
         Args:
             freq (int | float): the desired maximum freqency setting

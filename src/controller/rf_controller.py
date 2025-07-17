@@ -29,7 +29,7 @@ class RFController(QObject):
         self._connect_events_to_handlers()
 
         # If there is not an instrument connected, disable the gui and return
-        if not self.model.instrument:
+        if not self.model.is_connected:
             self._disable_gui()
             return
 
@@ -42,7 +42,7 @@ class RFController(QObject):
     def _create_polling_timer(self) -> None:
         self.polling_timer = QTimer(interval=1000)
         self.polling_timer.timeout.connect(self._poll_vrg)
-        if self.model.instrument:
+        if self.model.is_connected:
             self.polling_timer.start()
 
     def _get_vrg_data(self) -> None:
@@ -188,14 +188,12 @@ class RFController(QObject):
         rf_com_port: str | None
         rf_com_port, _ = get_ini_info()
 
-        resource_name = rf_com_port
-        if rf_com_port is not None:
-            resource_name = f'ASRL{rf_com_port[-1]}::INSTR'
-
         # Connect to the RF generator
         try:
-            if resource_name is not None:
-                self.model.instrument = self.model.open_connection(resource_name)
+            if rf_com_port is not None:
+                self.model.serial_port = self.model.open_connection(
+                    rf_com_port, baudrate=9600, timeout=1
+                )
             self.model.flush_input_buffer()
             self._init_control()
             self._enable_gui()
