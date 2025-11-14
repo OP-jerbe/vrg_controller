@@ -26,7 +26,7 @@ def get_ini_info() -> tuple[str | None, tuple[str, str, str]]:
         Or if the device is set to 'None', rf_com_port is returned as None.
     """
     root_dir: Path = get_root_dir()
-    ini_file: str = 'rf_controller.ini'
+    ini_file: str = 'configuration/rf_controller.ini'
     ini_file_path: str = str(root_dir / ini_file)
     config_data = load_config(ini_file_path)
     rf_generator = find_comport_device(config_data, 'RFGenerator')

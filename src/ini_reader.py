@@ -26,7 +26,7 @@ def get_rf_settings(
 
 
 if __name__ == '__main__':
-    ini_file = 'rf_controller.ini'
+    ini_file = 'configuration/rf_controller.ini'
 
     config_data = load_config(ini_file)
     rf_generator = find_comport_device(config_data, 'RFGenerator')
