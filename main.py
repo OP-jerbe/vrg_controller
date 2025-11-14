@@ -44,7 +44,7 @@ def run_app() -> NoReturn:
     # Set up the model-view-controller design pattern
     model = VRG(port=rf_com_port, freq_range=freq_range, max_power=max_power)
     view = MainWindow(version)
-    controller = RFController(model, view)  # noqa: F841
+    controller = RFController(model, view)
 
     view.show()
 
