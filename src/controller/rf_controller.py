@@ -29,7 +29,7 @@ class RFController(QObject):
         self._connect_events_to_handlers()
 
         # If there is not an instrument connected, disable the gui and return
-        if not self.model.is_connected:
+        if not self.model.serial_port:
             self._disable_gui()
             return
 
@@ -191,7 +191,7 @@ class RFController(QObject):
         # Connect to the RF generator
         try:
             if rf_com_port is not None:
-                self.model.serial_port = self.model.open_connection(
+                self.model.serial_port = self.model._open_connection(
                     rf_com_port, baudrate=9600, timeout=1
                 )
             self.model.flush_input_buffer()
