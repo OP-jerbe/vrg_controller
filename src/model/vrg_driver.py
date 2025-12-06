@@ -22,7 +22,7 @@ class VRG:
         self.serial_port: Optional[serial.Serial] = None
 
         if self.port_name is not None:
-            self.serial_port = self.open_connection(self.port_name, baudrate, timeout)
+            self.serial_port = self._open_connection(self.port_name, baudrate, timeout)
 
         self.lock = Lock()
 
@@ -35,7 +35,7 @@ class VRG:
         self.read_termination = '\r'
         self.write_termination = '\r'
 
-    def open_connection(
+    def _open_connection(
         self, port: str, baudrate: int, timeout: float
     ) -> serial.Serial:
         ser = serial.Serial(
