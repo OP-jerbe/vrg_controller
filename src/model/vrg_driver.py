@@ -44,7 +44,6 @@ class VRG:
         self.serial_port = ser
         return ser
 
-    @property
     def is_connected(self) -> bool:
         return self.serial_port is not None and self.serial_port.is_open
 
