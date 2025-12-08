@@ -42,7 +42,7 @@ class RFController(QObject):
     def _create_polling_timer(self) -> None:
         self.polling_timer = QTimer(interval=1000)
         self.polling_timer.timeout.connect(self._poll_vrg)
-        if self.model.is_connected:
+        if self.model.serial_port is not None and self.model.serial_port.is_open:
             self.polling_timer.start()
 
     def _get_vrg_data(self) -> None:

@@ -44,9 +44,6 @@ class VRG:
         self.serial_port = ser
         return ser
 
-    def is_connected(self) -> bool:
-        return self.serial_port is not None and self.serial_port.is_open
-
     def _send_command(self, command: str) -> None:
         if not self.serial_port or not self.serial_port.is_open:
             raise RuntimeError(
