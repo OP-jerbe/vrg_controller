@@ -188,16 +188,13 @@ class RFController(QObject):
         rf_com_port: str | None = get_ini_info()[0]
 
         # Connect to the RF generator
-        try:
-            if rf_com_port is not None:
-                self.model.serial_port = self.model.open_connection(rf_com_port)
-            self.model.flush_input_buffer()
-            self._init_control()
-            self._enable_gui()
-            self.polling_timer.start()
-            self.view.autotune_btn.setEnabled(True)
-        except Exception as e:
-            print(f'    Error trying to connect to RF generator: {e}')
+        if rf_com_port is not None:
+            self.model.serial_port = self.model.open_connection(rf_com_port)
+        self.model.flush_input_buffer()
+        self._init_control()
+        self._enable_gui()
+        self.polling_timer.start()
+        self.view.autotune_btn.setEnabled(True)
 
     def _handle_abs_mode_selected(self) -> None:
         """
