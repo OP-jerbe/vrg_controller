@@ -83,7 +83,7 @@ class VRG:
 
                 # Handle unsolicited output.
                 # Sometimes VRG outputs weird, spammy respoonses repeating "target".
-                # This while-loop throws that garbage away.
+                # This while-loop throws that garbage away and resends the query.
                 while 'target' in response:
                     print(
                         f'    Received unexpected unsolicited output.\n    {query = }\n    {response = }'
