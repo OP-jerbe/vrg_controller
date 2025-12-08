@@ -54,10 +54,11 @@ class VRG:
                 'Attempted to communicate with VRG, but no instrument is connected.'
             )
 
+        if not command.endswith(self.termination_char):
+            command += self.termination_char
+
         with self.lock:
             try:
-                if not command.endswith(self.termination_char):
-                    command += self.termination_char
                 self.serial_port.write(command.encode('utf-8'))
             except Exception as e:
                 raise ConnectionError(f'Serial Communication Error: {e}')
@@ -69,11 +70,11 @@ class VRG:
             raise RuntimeError(
                 'Attempted to communicate with VRG, but no instrument is connected.'
             )
+        if not query.endswith(self.termination_char):
+            query += self.termination_char
 
         with self.lock:
             try:
-                if not query.endswith(self.termination_char):
-                    query += self.termination_char
                 self.serial_port.reset_input_buffer()
                 self.serial_port.write(query.encode('utf-8'))
                 response = self._readline()
