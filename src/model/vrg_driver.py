@@ -39,10 +39,12 @@ class VRG:
         self, port: str, baudrate: int = 9600, timeout: float = 1.0
     ) -> serial.Serial | None:
         try:
-            ser = serial.Serial(
-                port=port, baudrate=baudrate, timeout=timeout, write_timeout=timeout
+            return serial.Serial(
+                port=port.upper(),
+                baudrate=baudrate,
+                timeout=timeout,
+                write_timeout=timeout,
             )
-            return ser
 
         except Exception as e:
             print(f'Failed to make a serial connection to {port}.\n\n{str(e)}')
@@ -105,16 +107,11 @@ class VRG:
                 'Attempted to communicate with VRG, but no instrument is connected.'
             )
 
-        try:
-            return (
-                self.serial_port.read_until(self.termination_char.encode('utf-8'))
-                .decode('utf-8')
-                .strip()
-            )
-
-        except Exception as e:
-            print(f'Serial read error: {e}')
-            return ''
+        return (
+            self.serial_port.read_until(self.termination_char.encode('utf-8'))
+            .decode('utf-8')
+            .strip()
+        )
 
     def flush_input_buffer(self) -> None:
         if not self.serial_port or not self.serial_port.is_open:
