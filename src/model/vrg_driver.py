@@ -79,7 +79,9 @@ class VRG:
                 self.serial_port.write(query.encode('utf-8'))
                 response = self._readline()
 
-                # Handle unsolicited output
+                # Handle unsolicited output.
+                # Sometimes VRG outputs weird, spammy respoonses repeating "target".
+                # This while-loop throws that garbage away.
                 while 'target' in response:
                     print(
                         f'    Received unexpected unsolicited output.\n    {query = }\n    {response = }'
