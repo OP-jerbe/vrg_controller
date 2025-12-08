@@ -98,19 +98,22 @@ class VRG:
 
     def _readline(self) -> str:
         """
-        Read until the termination character is found.
+        Read until the carriage return termination character is found.
         """
-        line = bytearray()
-        if self.serial_port:
-            while True:
-                char = self.serial_port.read(1)
-                if not char:
-                    break  # Timeout occurred
-                line += char
-                if char.decode('utf-8') == self.termination_char:
-                    break
-            return line.decode('utf-8').strip()
-        else:
+        if not self.serial_port or not self.serial_port.is_open:
+            raise RuntimeError(
+                'Attempted to communicate with VRG, but no instrument is connected.'
+            )
+
+        try:
+            return (
+                self.serial_port.read_until(self.termination_char.encode('utf-8'))
+                .decode('utf-8')
+                .strip()
+            )
+
+        except Exception as e:
+            print(f'Serial read error: {e}')
             return ''
 
     def flush_input_buffer(self) -> None:
