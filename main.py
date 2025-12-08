@@ -42,7 +42,7 @@ def run_app() -> NoReturn:
     freq_range: tuple[float, float] = (min_freq, max_freq)
 
     # Set up the model-view-controller design pattern
-    model = VRG(port=rf_com_port, freq_range=freq_range, max_power=max_power)
+    model = VRG(com_port=rf_com_port, freq_range=freq_range, max_power=max_power)
     view = MainWindow(version)
     controller = RFController(model, view)
 

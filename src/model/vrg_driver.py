@@ -15,11 +15,11 @@ class VRG:
 
     def __init__(
         self,
-        port: Optional[str] = None,
+        com_port: Optional[str] = None,
         freq_range: tuple[float, float] = (25, 42),
         max_power: int = 1000,
     ) -> None:
-        self.com_port = port
+        self.com_port = com_port
         self.serial_port: Optional[serial.Serial] = None
 
         if self.com_port is not None:
