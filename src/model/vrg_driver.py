@@ -23,7 +23,7 @@ class VRG:
         self.serial_port: Optional[serial.Serial] = None
 
         if self.com_port is not None:
-            self.serial_port = self._open_connection(self.com_port)
+            self.serial_port = self.open_connection(self.com_port)
 
         self.lock = Lock()
 
@@ -36,14 +36,18 @@ class VRG:
         self.read_termination = '\r'
         self.write_termination = '\r'
 
-    def _open_connection(
+    def open_connection(
         self, port: str, baudrate: int = 9600, timeout: float = 1.0
-    ) -> serial.Serial:
-        ser = serial.Serial(
-            port=port, baudrate=baudrate, timeout=timeout, write_timeout=timeout
-        )
-        self.serial_port = ser
-        return ser
+    ) -> serial.Serial | None:
+        try:
+            ser = serial.Serial(
+                port=port, baudrate=baudrate, timeout=timeout, write_timeout=timeout
+            )
+            return ser
+
+        except Exception as e:
+            print(f'Failed to make a serial connection to {port}.\n\n{str(e)}')
+            return None
 
     def _send_command(self, command: str) -> None:
         if not self.serial_port or not self.serial_port.is_open:
