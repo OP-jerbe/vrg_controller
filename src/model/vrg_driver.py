@@ -33,8 +33,7 @@ class VRG:
         self.max_freq_setting = self.max_freq_limit
         self.max_power_setting = max_power
 
-        self.read_termination = '\r'
-        self.write_termination = '\r'
+        self.termination_char = '\r'
 
     def open_connection(
         self, port: str, baudrate: int = 9600, timeout: float = 1.0
@@ -57,8 +56,9 @@ class VRG:
 
         with self.lock:
             try:
-                full_command = command + self.write_termination
-                self.serial_port.write(full_command.encode('utf-8'))
+                if not command.endswith(self.termination_char):
+                    command += self.termination_char
+                self.serial_port.write(command.encode('utf-8'))
             except Exception as e:
                 raise ConnectionError(f'Serial Communication Error: {e}')
 
@@ -72,9 +72,10 @@ class VRG:
 
         with self.lock:
             try:
-                full_query = query + self.write_termination
+                if not query.endswith(self.termination_char):
+                    query += self.termination_char
                 self.serial_port.reset_input_buffer()
-                self.serial_port.write(full_query.encode('utf-8'))
+                self.serial_port.write(query.encode('utf-8'))
                 response = self._readline()
 
                 # Handle unsolicited output
@@ -83,7 +84,7 @@ class VRG:
                         f'    Received unexpected unsolicited output.\n    {query = }\n    {response = }'
                     )
                     self.serial_port.reset_input_buffer()
-                    self.serial_port.write(full_query.encode('utf-8'))
+                    self.serial_port.write(query.encode('utf-8'))
                     response = self._readline()
 
             except Exception as e:
@@ -103,7 +104,7 @@ class VRG:
                 if not char:
                     break  # Timeout occurred
                 line += char
-                if char.decode('utf-8') == self.read_termination:
+                if char.decode('utf-8') == self.termination_char:
                     break
             return line.decode('utf-8').strip()
         else:
