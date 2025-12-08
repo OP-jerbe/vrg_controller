@@ -35,21 +35,6 @@ class VRG:
 
         self.termination_char = '\r'
 
-    def open_connection(
-        self, port: str, baudrate: int = 9600, timeout: float = 1.0
-    ) -> serial.Serial | None:
-        try:
-            return serial.Serial(
-                port=port.upper(),
-                baudrate=baudrate,
-                timeout=timeout,
-                write_timeout=timeout,
-            )
-
-        except Exception as e:
-            print(f'Failed to make a serial connection to {port}.\n\n{str(e)}')
-            return None
-
     def _send_command(self, command: str) -> None:
         if not self.serial_port or not self.serial_port.is_open:
             raise RuntimeError(
@@ -112,6 +97,21 @@ class VRG:
             .decode('utf-8')
             .strip()
         )
+
+    def open_connection(
+        self, port: str, baudrate: int = 9600, timeout: float = 1.0
+    ) -> serial.Serial | None:
+        try:
+            return serial.Serial(
+                port=port.upper(),
+                baudrate=baudrate,
+                timeout=timeout,
+                write_timeout=timeout,
+            )
+
+        except Exception as e:
+            print(f'Failed to make a serial connection to {port}.\n\n{str(e)}')
+            return None
 
     def flush_input_buffer(self) -> None:
         if not self.serial_port or not self.serial_port.is_open:
