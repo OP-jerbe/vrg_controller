@@ -7,22 +7,23 @@ import serial
 class VRG:
     """
     Class that implements the driver for the Variable Frequency RF Generator (VRG),
-    using pyserial instead of pyvisa.
+    Args:
+        port (str | None): The COM port where the VRG is connected. Default is None.
+        freq_range (tuple(float | float)): The operating frequency range in MHz. Default is (25, 42)
+        max_power (int): The maximum power output in watts. Default is 1000.
     """
 
     def __init__(
         self,
         port: Optional[str] = None,
-        baudrate: int = 9600,
-        timeout: float = 1.0,
-        freq_range: tuple[int | float, int | float] = (25, 42),
+        freq_range: tuple[float, float] = (25, 42),
         max_power: int = 1000,
     ) -> None:
-        self.port_name = port
+        self.com_port = port
         self.serial_port: Optional[serial.Serial] = None
 
-        if self.port_name is not None:
-            self.serial_port = self._open_connection(self.port_name, baudrate, timeout)
+        if self.com_port is not None:
+            self.serial_port = self._open_connection(self.com_port)
 
         self.lock = Lock()
 
@@ -36,7 +37,7 @@ class VRG:
         self.write_termination = '\r'
 
     def _open_connection(
-        self, port: str, baudrate: int, timeout: float
+        self, port: str, baudrate: int = 9600, timeout: float = 1.0
     ) -> serial.Serial:
         ser = serial.Serial(
             port=port, baudrate=baudrate, timeout=timeout, write_timeout=timeout
