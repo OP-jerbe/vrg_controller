@@ -263,7 +263,7 @@ class RFController(QObject):
         try:
             print(f'Power Requested: {new_value}')
             power = int(new_value)
-            self.model.set_rf_power(power)
+            self.model.set_power(power)
         except Exception as e:
             print(f'    Error setting power: {e}')
 

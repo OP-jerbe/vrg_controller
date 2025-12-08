@@ -158,7 +158,7 @@ class VRG:
         command = 'PM1'
         self._send_command(command)
 
-    def set_rf_power(self, power: int) -> None:
+    def set_power(self, power: int) -> None:
         """
         Set the RF power output setting.
 
