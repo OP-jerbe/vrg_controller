@@ -172,7 +172,7 @@ class VRG:
             raise ValueError(
                 f'Input {power} is out of bounds. Must be between 0 and {self.max_power_setting}.'
             )
-        command = f'SP{power:04}'
+        command = f'SP{power:04d}'
         self._send_command(command)
 
     def set_min_freq(self, freq: int | float) -> None:
