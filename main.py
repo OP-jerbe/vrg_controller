@@ -25,7 +25,7 @@ def run_app() -> NoReturn:
     *Note: `app.exec() == 0` when the event loop stops. `sys.exit(0)` terminates the application.
     """
 
-    version = '1.0.0'
+    version = '1.1.0'
     app = QApplication([])
 
     # Get the com port and rf settings from the ini file

@@ -48,12 +48,12 @@ class RFController(QObject):
     def _get_vrg_data(self) -> None:
         try:
             data: dict[str, int | float | None] = {
-                'status_num': self.model.read_status_byte(),
-                'power_setting': self.model.read_power_setting(),
-                'freq_setting': self.model.read_freq_setting(),
-                'fwd_power': self.model.read_fwd_power(),
-                'rfl_power': self.model.read_rfl_power(),
-                'abs_power': self.model.read_abs_power(),
+                'status_num': self.model.status_byte,
+                'power_setting': self.model.power,
+                'freq_setting': self.model.freq,
+                'fwd_power': self.model.fwd_power,
+                'rfl_power': self.model.rfl_power,
+                'abs_power': self.model.abs_power,
             }
             self.data_acquired.emit(data)
 
@@ -131,7 +131,7 @@ class RFController(QObject):
         """
         try:
             self.model.disable_echo()  # send "DE" to VRG
-            self.model.disable_rf()  # send "DR" to VRG
+            self.model.is_output_enabled = False  # send "DR" to VRG
             self.model.set_abs_mode()  # send "PM1" to VRG
         except Exception as e:
             print(f'    Unexpected Error initializing GUI display: {e}')
@@ -221,10 +221,10 @@ class RFController(QObject):
         print('RF Enable button clicked.')
         try:
             if self.view.enable_rf_btn.isChecked():
-                self.model.enable_rf()
+                self.model.is_output_enabled = True
                 self.view.enable_rf_btn.setText('RF On')
             else:
-                self.model.disable_rf()
+                self.model.is_output_enabled = False
                 self.view.enable_rf_btn.setText('RF Off')
         except Exception as e:
             print(f'    Error enabling/disabling RF: {e}')
@@ -236,7 +236,7 @@ class RFController(QObject):
         print('Autotune Clicked.')
         try:
             self.model.autotune()
-            freq: float | None = self.model.read_freq_setting()
+            freq: float | None = self.model.freq
             self.view.freq_le.setText(f'{freq:.2f}')
             self.view.freq_display_label.setText(f'{freq:.2f} MHz')
         except Exception as e:
@@ -261,7 +261,7 @@ class RFController(QObject):
         try:
             print(f'Power Requested: {new_value}')
             power = int(new_value)
-            self.model.set_power(power)
+            self.model.power = power
         except Exception as e:
             print(f'    Error setting power: {e}')
 
@@ -272,7 +272,7 @@ class RFController(QObject):
         try:
             print(f'Frequency Requested: {new_value}')
             freq = float(new_value)
-            self.model.set_freq(freq)
+            self.model.freq = freq
         except Exception as e:
             print(f'    Error setting frequency: {e}')
 

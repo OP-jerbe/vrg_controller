@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import cast
 
 from PySide6.QtCore import QEvent, QObject, Signal
 from PySide6.QtGui import QAction, QActionGroup, QIcon, QMouseEvent, Qt
