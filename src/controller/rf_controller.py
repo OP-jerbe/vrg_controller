@@ -133,8 +133,6 @@ class RFController(QObject):
             self.model.disable_echo()  # send "DE" to VRG
             self.model.disable_rf()  # send "DR" to VRG
             self.model.set_abs_mode()  # send "PM1" to VRG
-        except TypeError as te:
-            print(f'    TypeError: {te}')
         except Exception as e:
             print(f'    Unexpected Error initializing GUI display: {e}')
 
