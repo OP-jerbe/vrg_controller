@@ -138,12 +138,10 @@ class VRG:
     def enable_echo(self) -> None:
         command = 'EE'
         self._send_command(command)
-        self.echo_on = True
 
     def disable_echo(self) -> None:
         command = 'DE'
         self._send_command(command)
-        self.echo_on = False
 
     def set_fwd_mode(self) -> None:
         """Sets the power output mode to Forward mode (white background screen)"""
