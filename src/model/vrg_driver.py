@@ -42,6 +42,20 @@ class VRG:
     ####################################################################################
 
     def _send_command(self, command: str) -> None:
+        """
+        Sends a command string to the VRG without expecting a response.
+
+        Args:
+            command (str): The command string to send to the instrument.
+                The carriage return termination character is appended automatically.
+
+        Returns:
+            None: This method returns nothing.
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open.
+            ConnectionError: If a serial communication error occurs during the write operation.
+        """
         if not self.serial_port or not self.serial_port.is_open:
             raise RuntimeError(
                 'Attempted to communicate with VRG, but no instrument is connected.'
@@ -54,11 +68,26 @@ class VRG:
             try:
                 self.serial_port.write(command.encode('utf-8'))
             except Exception as e:
-                raise ConnectionError(f'Serial Communication Error: {e}')
+                raise ConnectionError(f'Serial Communication Error\n\n{str(e)}')
 
         print(f'Command: "{command.strip()}"')
 
     def _send_query(self, query: str) -> str:
+        """
+        Sends a query command to the VRG, reads the response, and handles unsolicited output.
+
+        Args:
+            query (str): The query command string to send.
+                The carriage return termination character is appended automatically.
+
+        Returns:
+            str: The decoded and stripped string response received from the instrument.
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open.
+            Exception: If an unexpected error occurs during serial communication, which may include
+                timeout errors during the read operation (raised by the underlying logic).
+        """
         if not self.serial_port or not self.serial_port.is_open:
             raise RuntimeError(
                 'Attempted to communicate with VRG, but no instrument is connected.'
@@ -91,7 +120,16 @@ class VRG:
 
     def _readline(self) -> str:
         """
-        Read until the carriage return termination character is found.
+        Reads data from the serial port until the carriage return termination character is found.
+
+        Args:
+            None: This method takes no arguments.
+
+        Returns:
+            str: The decoded and stripped line of response data.
+
+        Raises:
+            RuntimeError: If the serial port object is not initialized.
         """
         if not self.serial_port:
             raise RuntimeError('No serial port connection.')
@@ -102,9 +140,27 @@ class VRG:
             .strip()
         )
 
+    @staticmethod
     def open_connection(
-        self, port: str, baudrate: int = 9600, timeout: float = 1.0
+        port: str, baudrate: int = 9600, timeout: float = 1.0
     ) -> serial.Serial | None:
+        """
+        Establishes a serial connection to the instrument at the specified COM port.
+
+        Args:
+            port (str): The COM port where the VRG is connected (e.g., 'COM3' or '/dev/ttyUSB0').
+                The port name is automatically converted to uppercase.
+            baudrate (int): The serial communication baud rate in bits per second. Defaults to 9600.
+            timeout (float): The read and write timeout in seconds. Defaults to 1.0.
+
+        Returns:
+            serial.Serial | None: The active `serial.Serial` object if the connection is successful,
+                or None if the connection attempt failed.
+
+        Raises:
+            None: This method handles connection exceptions internally (prints an error
+                message) and returns None on failure instead of raising.
+        """
         try:
             return serial.Serial(
                 port=port.upper(),
@@ -118,6 +174,19 @@ class VRG:
             return None
 
     def flush_input_buffer(self) -> None:
+        """
+        Clears (flushes) the input buffer of the serial port, discarding any data
+        that may have been received but not yet read.
+
+        Args:
+            None: This method takes no arguments.
+
+        Returns:
+            None: This method returns nothing.
+
+        Raises:
+            ConnectionError: If a communication error occurs during the buffer reset (raised by the serial library).
+        """
         if not self.serial_port or not self.serial_port.is_open:
             return
 
@@ -129,39 +198,132 @@ class VRG:
     ####################################################################################
 
     def ping(self) -> str:
+        """
+        Sends a simple ping command to the VRG to check for communication and response.
+
+        Args:
+            None: This method takes no arguments.
+
+        Returns:
+            str: The raw response from the instrument, which is expected to be "WAZOO!".
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_query`).
+            Exception: If an unexpected serial communication error occurs (raised by `_send_query`).
+        """
         command = '!'
         return self._send_query(command)
 
     def enable_echo(self) -> None:
+        """
+        Enables command echoing from the VRG. When enabled, the instrument repeats
+        the command sent back to the driver before executing it.
+
+        Args:
+            None: This method takes no arguments.
+
+        Returns:
+            None: This method returns nothing.
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_command`).
+            ConnectionError: If a serial communication error occurs during the write operation (raised by `_send_command`).
+        """
         command = 'EE'
         self._send_command(command)
 
     def disable_echo(self) -> None:
+        """
+        Disables command echoing from the VRG. The instrument will not repeat the
+        command sent back to the driver.
+
+        Args:
+            None: This method takes no arguments.
+
+        Returns:
+            None: This method returns nothing.
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_command`).
+            ConnectionError: If a serial communication error occurs during the write operation (raised by `_send_command`).
+        """
         command = 'DE'
         self._send_command(command)
 
     def set_fwd_mode(self) -> None:
-        """Sets the power output mode to Forward mode (white background screen)"""
+        """
+        Sets the power output display mode to **Forward** mode.
+
+        This mode corresponds to a **white background** on the instrument's display.
+
+        Args:
+            None: This method takes no arguments.
+
+        Returns:
+            None: This method returns nothing.
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_command`).
+            ConnectionError: If a serial communication error occurs during the write operation (raised by `_send_command`).
+        """
         command = 'PM0'
         self._send_command(command)
 
     def set_abs_mode(self) -> None:
-        """Sets the power output mode to Absorbed mode (black background screen)"""
+        """
+        Sets the power output display mode to **Absorbed** mode.
+
+        This mode corresponds to a **black background** on the instrument's display,
+        showing the power actually absorbed by the load (Forward Power - Reflected Power).
+
+        Args:
+            None: This method takes no arguments.
+
+        Returns:
+            None: This method returns nothing.
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_command`).
+            ConnectionError: If a serial communication error occurs during the write operation (raised by `_send_command`).
+        """
         command = 'PM1'
         self._send_command(command)
 
     def autotune(self) -> None:
         """
-        Tells the VRG to search for the frequency at which the reflected power
-        is minimized.
+        Initiates a broad Autotune procedure on the VRG.
+
+        This command tells the instrument to search across a wide frequency range
+        to find the frequency at which the reflected power is minimized.
+
+        Args:
+            None: This method takes no arguments.
+
+        Returns:
+            None: This method returns nothing.
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_command`).
+            ConnectionError: If a serial communication error occurs during the write operation (raised by `_send_command`).
         """
         command = 'TW'
         self._send_command(command)
 
     def narrow_autotune(self) -> None:
         """
-        Tells the VRG to search for the frequency at which the reflected power
-        is minimized. Similar to autotune but searches a smaller window.
+        Initiates a narrow Autotune procedure on the VRG.
+
+        This command is similar to `autotune` but restricts the search window to a smaller freqency window
+
+        Args:
+            None: This method takes no arguments.
+
+        Returns:
+            None: This method returns nothing.
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_command`).
+            ConnectionError: If a serial communication error occurs during the write operation (raised by `_send_command`).
         """
         command = 'TT'
         self._send_command(command)
@@ -170,7 +332,19 @@ class VRG:
 
     @property
     def is_enabled(self) -> bool:
-        """GETTER: Reads the enable toggle switch state (True=up/on, False=down/off)."""
+        """
+        GETTER: Reads the state of the physical enable toggle switch on the VRG.
+
+        Args:
+            None: This property takes no arguments.
+
+        Returns:
+            bool: True if the enable switch is in the 'up' (ON) position, False if in the 'down' (OFF) position.
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `status_byte`).
+            Exception: If an unexpected serial communication error occurs (raised by `status_byte`).
+        """
         status = self.status_byte
         # Third from the last char is the enable switch I/O bit.
         enable_bit: str = bin(status)[-3]
@@ -178,7 +352,19 @@ class VRG:
 
     @property
     def is_overtemp(self) -> bool:
-        """GETTER: Reads the overtemp status."""
+        """
+        GETTER: Reads the internal overtemperature protection status of the VRG.
+
+        Args:
+            None: This property takes no arguments.
+
+        Returns:
+            bool: True if the VRG is currently reporting an overtemperature condition, False otherwise.
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `status_byte`).
+            Exception: If an unexpected serial communication error occurs (raised by `status_byte`).
+        """
         status = self.status_byte
         # second from the last char is the overtemp bit
         overtemp_bit: str = bin(status)[-2]
@@ -186,7 +372,19 @@ class VRG:
 
     @property
     def is_interlocked(self) -> bool:
-        """GETTER: Reads the interlock status."""
+        """
+        GETTER: Reads the status of the safety interlock circuit.
+
+        Args:
+            None: This property takes no arguments.
+
+        Returns:
+            bool: True if the safety interlock is open (circuit interrupted), False if the interlock is closed (safe).
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `status_byte`).
+            Exception: If an unexpected serial communication error occurs (raised by `status_byte`).
+        """
         status = self.status_byte
         # Last char is the interlock bit.
         interlock_bit: str = bin(status)[-1]
@@ -196,7 +394,19 @@ class VRG:
 
     @property
     def is_output_enabled(self) -> bool:
-        """GETTER: Reads the software RF output enabled state."""
+        """
+        GETTER: Reads the software RF output enabled state.
+
+        Args:
+            None: This property takes no arguments.
+
+        Returns:
+            bool: True if the software output is enabled, False otherwise.
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `status`).
+            Exception: If an unexpected serial communication error occurs (raised by `status`).
+        """
         # The second item in the status list is the status byte.
         status_byte = int(self.status[1])
         # The last char is the software enabled bit.
@@ -209,7 +419,15 @@ class VRG:
         SETTER: Writes the enable state in the software to allow or disallow RF output.
 
         Args:
-            enable (bool): Boolean to tell the VRG to output RF power.
+            enable (bool): Boolean state to set the software RF output control.
+                True enables the output ('ER' command); False disables it ('DR' command).
+
+        Returns:
+            None: This method returns nothing.
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_command`).
+            ConnectionError: If a serial communication error occurs during the write operation (raised by `_send_command`).
         """
         if enable:
             command = 'ER'
@@ -221,27 +439,41 @@ class VRG:
 
     @property
     def power(self) -> int:
+        """
+        GETTER: Reads the currently set output power level of the VRG.
+
+        Args:
+            None: This property takes no arguments.
+
+        Returns:
+            int: The configured power level in watts (W).
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_query`).
+            Exception: If an unexpected serial communication error occurs (raised by `_send_query`).
+            TypeError: If the instrument's response cannot be converted into an integer.
+        """
         command = 'RO'
         response = self._send_query(command).replace(command, '').strip()
-
-        try:
-            return int(float(response))
-
-        except TypeError as e:
-            print(f'Error converting power setting to int\n\n{str(e)}')
-            raise
-
-        except Exception as e:
-            print(f'Unexpected Error\n\n{str(e)}')
-            raise
+        return int(float(response))
 
     @power.setter
     def power(self, value: int) -> None:
         """
-        Set the power level of the VRG.
+        SETTER: Sets the desired power output level of the VRG.
 
         Args:
-            value (int): Desired power level in watts.
+            value (int): Desired power level in watts (W). The value must be between 0 and
+                the maximum configured power (`self._max_power`).
+
+        Returns:
+            None: This method returns nothing.
+
+        Raises:
+            TypeError: If the input `value` is not an integer.
+            ValueError: If the input `value` is outside the allowable range (0 to `self._max_power`).
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_command`).
+            ConnectionError: If a serial communication error occurs during the write operation (raised by `_send_command`).
         """
         if not isinstance(value, int):
             raise TypeError(f'Expected an int, but got {type(value).__name__}')
@@ -258,28 +490,41 @@ class VRG:
 
     @property
     def freq(self) -> float:
+        """
+        GETTER: Reads the currently set output frequency of the VRG.
+
+        Args:
+            None: This property takes no arguments.
+
+        Returns:
+            float: The configured frequency in megahertz (MHz).
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_query`).
+            Exception: If an unexpected serial communication error occurs (raised by `_send_query`).
+            ValueError: If the instrument's response cannot be converted into a float.
+        """
         command = 'RQ'
         response = self._send_query(command).replace(command, '').strip()
-
-        try:
-            # Multiply response by 1e-3 to convert to MHz.
-            return float(response) * 1e-3
-
-        except TypeError as e:
-            print(f'Error converting frequency setting to float\n\n{str(e)}')
-            raise
-
-        except Exception as e:
-            print(f'Unexpected Error\n\n{str(e)}')
-            raise
+        return float(response) * 1e-3
 
     @freq.setter
     def freq(self, value: int | float) -> None:
         """
-        Set the frequency of the VRG.
+        SETTER: Sets the desired output frequency of the VRG.
 
         Args:
-            freq (int | float): Frequency setting in MHz.
+            value (int | float): Desired frequency setting in megahertz (MHz). The value must be
+                within the currently allowed range (`self._min_freq` to `self._max_freq`).
+
+        Returns:
+            None: This method returns nothing.
+
+        Raises:
+            TypeError: If the input `value` is not an integer or float.
+            ValueError: If the input `value` is outside the allowed frequency range.
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_command`).
+            ConnectionError: If a serial communication error occurs during the write operation (raised by `_send_command`).
         """
         if not isinstance(value, int | float):
             raise TypeError(f'Expected an int or float, but got {type(value).__name__}')
@@ -298,29 +543,43 @@ class VRG:
 
     @property
     def min_freq(self) -> float:
+        """
+        GETTER: Reads the currently set minimum allowable output frequency of the VRG.
+
+        Args:
+            None: This property takes no arguments.
+
+        Returns:
+            float: The minimum frequency limit in megahertz (MHz).
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_query`).
+            Exception: If an unexpected serial communication error occurs (raised by `_send_query`).
+            TypeError: If the instrument's response cannot be converted into a number.
+        """
         command = 'R1'
         response = self._send_query(command).replace(command, '').strip()
-
-        try:
-            # Multiply by 1e-3 to convert kHz to MHz.
-            self._min_freq = float(response) * 1e-3
-            return self._min_freq
-
-        except TypeError as e:
-            print(f'Error converting min freq to float\n\n{str(e)}')
-            raise
-
-        except Exception as e:
-            print(f'Unexpected Error\n\n{str(e)}')
-            raise
+        # Multiply by 1e-3 to convert kHz to MHz.
+        self._min_freq = float(response) * 1e-3
+        return self._min_freq
 
     @min_freq.setter
     def min_freq(self, value: int | float) -> None:
         """
-        Set the minimum allowable frequency output within the the hard frequency limits (typically 25-42 MHz)
+        SETTER: Sets the minimum allowable output frequency within the VRG's hard frequency limits.
 
         Args:
-            value (int | float): Desired minimum frequency in MHz.
+            value (int | float): Desired minimum frequency limit in megahertz (MHz).
+                Must be between within the frequency range set by the `freq_range` argument.
+
+        Returns:
+            None: This method returns nothing.
+
+        Raises:
+            TypeError: If the input `value` is not an integer or float.
+            ValueError: If the input `value` is outside the VRG's hard frequency limits.
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_command`).
+            ConnectionError: If a serial communication error occurs during the write operation (raised by `_send_command`).
         """
         if not isinstance(value, int | float):
             raise TypeError(
@@ -343,29 +602,43 @@ class VRG:
 
     @property
     def max_freq(self) -> float:
+        """
+        GETTER: Reads the currently set maximum allowable output frequency of the VRG.
+
+        Args:
+            None: This property takes no arguments.
+
+        Returns:
+            float: The maximum frequency limit in megahertz (MHz).
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_query`).
+            Exception: If an unexpected serial communication error occurs (raised by `_send_query`).
+            TypeError: If the instrument's response cannot be converted into a number.
+        """
         command = 'R2'
         response = self._send_query(command).replace(command, '').strip()
-
-        try:
-            # Multiply by 1e-3 to convert kHz to MHz.
-            self._max_freq = float(response) * 1e-3
-            return self._max_freq
-
-        except TypeError as e:
-            print(f'Error converting max frequency to float\n\n{str(e)}')
-            raise
-
-        except Exception as e:
-            print(f'Unexpected Error\n\n{str(e)}')
-            raise
+        # Multiply by 1e-3 to convert kHz to MHz.
+        self._max_freq = float(response) * 1e-3
+        return self._max_freq
 
     @max_freq.setter
     def max_freq(self, value: int | float) -> None:
         """
-        Set the maximum allowable frequency output within the the hard frequency limits (typically 25-42 MHz)
+        SETTER: Sets the maximum allowable output frequency within the VRG's hard frequency limits.
 
         Args:
-            value (int | float): Desired maximum frequency in MHz.
+            value (int | float): Desired maximum frequency limit in megahertz (MHz).
+                Must be between within the frequency range set by the `freq_range` argument.
+
+        Returns:
+            None: This method returns nothing.
+
+        Raises:
+            TypeError: If the input `value` is not an integer or float.
+            ValueError: If the input `value` is outside the VRG's hard frequency limits.
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_command`).
+            ConnectionError: If a serial communication error occurs during the write operation (raised by `_send_command`).
         """
         if not isinstance(value, int | float):
             raise TypeError(
@@ -391,7 +664,20 @@ class VRG:
 
     @property
     def fwd_power(self) -> int:
-        """GETTER: Reads the forward power."""
+        """
+        GETTER: Reads the measured **Forward Power** output by the VRG.
+
+        Args:
+            None: This property takes no arguments.
+
+        Returns:
+            int: The forward power in watts (W).
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_query`).
+            Exception: If an unexpected serial communication error occurs (raised by `_send_query`).
+            ValueError: If the instrument's response cannot be converted into an integer.
+        """
         command = 'RF'
         response = self._send_query(command).replace(command, '').strip()
         fwd_power = int(float(response))
@@ -399,7 +685,20 @@ class VRG:
 
     @property
     def rfl_power(self) -> int:
-        """GETTER: Reads the reflected power."""
+        """
+        GETTER: Reads the measured **Reflected Power** (power returned from the load) by the VRG.
+
+        Args:
+            None: This property takes no arguments.
+
+        Returns:
+            int: The reflected power in watts (W).
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_query`).
+            Exception: If an unexpected serial communication error occurs (raised by `_send_query`).
+            ValueError: If the instrument's response cannot be converted into an integer.
+        """
         command = 'RR'
         response = self._send_query(command).replace(command, '').strip()
         rfl_power = int(float(response))
@@ -407,7 +706,20 @@ class VRG:
 
     @property
     def abs_power(self) -> int:
-        """GETTER" Reads the absorbed power."""
+        """
+        GETTER: Reads the calculated **Absorbed Power** (Forward Power - Reflected Power).
+
+        Args:
+            None: This property takes no arguments.
+
+        Returns:
+            int: The absorbed power in watts (W).
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_query`).
+            Exception: If an unexpected serial communication error occurs (raised by `_send_query`).
+            ValueError: If the instrument's response cannot be converted into an integer.
+        """
         command = 'RB'
         response = self._send_query(command).replace(command, '').strip()
         abs_power = int(float(response))
@@ -418,14 +730,27 @@ class VRG:
     @property
     def factory_info(self) -> str:
         """
-        GETTER: Reads the factory info.
+        GETTER: Reads the raw factory information string from the VRG.
 
-        Read Factory Information example return: "607 00171 022426 017180 00000 00000"
-        607 is serial number
-        171 is num of reboots
-        22426 is operating hours
-        17180 is enabled hours
-        zeros are unimplementd options
+        The response is a space-separated string containing various operational and manufacturing data:
+
+        Example: "607 00171 022426 017180 00000 00000"
+
+        * **Serial Number:** First value (e.g., '607')
+        * **Number of Reboots:** Second value (e.g., '00171')
+        * **Operating Hours:** Third value (e.g., '022426')
+        * **Enabled Hours:** Fourth value (e.g., '017180')
+        * **Unimplemented Options:** Remaining zero values.
+
+        Args:
+            None: This property takes no arguments.
+
+        Returns:
+            str: The raw, space-separated string of factory information from the instrument.
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_query`).
+            Exception: If an unexpected serial communication error occurs (raised by `_send_query`).
         """
         command = 'RI'
         return self._send_query(command).replace(command, '').strip()
@@ -433,15 +758,37 @@ class VRG:
     @property
     def status_byte(self) -> int:
         """
-        Reads the status byte from the VRG. For example, if the enable switch is off (down),
-        the over temp warning is not on, and the interlock is satisfied, the byte
-        generated will be `00000000` so the integer returned will be `0`. If the enable
-        switch is on (up), the over temp warning is on, and the interlock unsatisfied, the
-        byte generated will be `00000111`, so the integer returned will be `7`.
+        GETTER: Reads the raw status byte from the VRG.
+
+        This integer value contains the bitwise status of several key safety and operational indicators,
+        including the **enable switch**, **overtemperature warning**, and **safety interlock** states.
+
+        The returned integer corresponds to a bitmask where specific bits indicate the status:
+
+        * **Bit 0 (LSB):** Interlock Status (1 = Unsatisfied/Open; 0 = Satisfied/Closed)
+        * **Bit 1:** Overtemperature Warning (1 = Warning/Active; 0 = Normal)
+        * **Bit 2:** Enable Switch Position (1 = Up/ON; 0 = Down/OFF)
+
+        All possible states for these three bits:
+        0 (000): Enable OFF, Overtemp OFF, Interlock Satisfied
+        1 (001): Enable OFF, Overtemp OFF, Interlock Unsatisfied
+        2 (010): Enable OFF, Overtemp ON, Interlock Satisfied
+        3 (011): Enable OFF, Overtemp ON, Interlock Unsatisfied
+        4 (100): Enable ON, Overtemp OFF, Interlock Satisfied
+        5 (101): Enable ON, Overtemp OFF, Interlock Unsatisfied
+        6 (110): Enable ON, Overtemp ON, Interlock Satisfied
+        7 (111): Enable ON, Overtemp ON, Interlock Unsatisfied
+
+        Args:
+            None: This property takes no arguments.
 
         Returns:
-            int: a number that corresponds to the bitwise integer built from the position of
-            the enable switch, over temp state, and interlock state.
+            int: An integer corresponding to the bitmask of the status indicators.
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_query`).
+            Exception: If an unexpected serial communication error occurs (raised by `_send_query`).
+            ValueError: If the instrument's response cannot be converted into an integer.
         """
         command = 'GS'
         response: str = self._send_query(command).replace(command, '').strip()
@@ -451,14 +798,38 @@ class VRG:
     @property
     def status(self) -> list[int | float]:
         """
-        Reads the status of the VRG. The status list includes:
-        [version number, status byte, 5V voltage, 12V voltage, main power voltage, main power current, amp temperature, board temperature]
-        [float         , int        , float     , float      , float             , float             , float          , float            ]
+        GETTER: Reads the comprehensive operational status of the VRG.
 
-        Note: `status byte` here is not the same as `read_status_byte`. See VRG manual for difference.
+        The returned list contains various parameters related to firmware, internal voltages,
+        temperatures, and power conditions, formatted as:
+
+        [
+            version_number (float),
+            status_byte (int),
+            5V_voltage (float),
+            12V_voltage (float),
+            main_power_voltage (float),
+            main_power_current (float),
+            amp_temperature (float),
+            board_temperature (float)
+        ]
+
+        Note: The `status_byte` in this list is **not** the same as the value returned by
+        the dedicated `status_byte` property (`GS` command). Consult the VRG manual
+        for the specific bit definitions of this status byte.
+
+        Args:
+            None: This property takes no arguments.
 
         Returns:
-            list: List of statuses
+            list[int | float]: A list of mixed integer and float values representing the
+                current state of the instrument's operational parameters.
+
+        Raises:
+            RuntimeError: If the serial port is not connected or not open (raised by `_send_query`).
+            Exception: If an unexpected serial communication error occurs (raised by `_send_query`).
+            ValueError: If any item in the instrument's response cannot be converted to the
+                expected number format (int or float).
         """
         command = 'RT'
         response: str = self._send_query(command).replace(command, '').strip()
