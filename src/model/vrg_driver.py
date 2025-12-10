@@ -24,7 +24,6 @@ class VRG:
         self._min_freq_hard_limit = freq_range[0]
         self._max_freq_hard_limit = freq_range[1]
         self._max_power = max_power
-        self._power_mode: int  # 0 = forward power mode, 1 = absorbed power mode
 
         # Init the allowable frequency range to be the hardware frequency limits.
         self._min_freq = self._min_freq_hard_limit
