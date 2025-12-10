@@ -93,10 +93,8 @@ class VRG:
         """
         Read until the carriage return termination character is found.
         """
-        if not self.serial_port or not self.serial_port.is_open:
-            raise RuntimeError(
-                'Attempted to communicate with VRG, but no instrument is connected.'
-            )
+        if not self.serial_port:
+            raise RuntimeError('No serial port connection.')
 
         return (
             self.serial_port.read_until(self._term_char.encode('utf-8'))
