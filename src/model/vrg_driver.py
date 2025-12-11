@@ -24,19 +24,22 @@ class VRG:
         max_power (int): The maximum power output in watts. Default is 800. Set in firmware at factory.
 
     ***Example usage:***
-    >>> vrg = VRG('COM1')               # connects to the VRG on COM1
-    >>> vrg.ping()                      # returns "WAZOO!" (used to safely verify communication with VRG)
-    >>> vrg.set_abs_mode()              # sets the power delivery mode to absorbed mode (preferred)
-    >>> vrg.freq                        # reads the current frequency setting (e.g. 38.45 MHz)
-    >>> vrg.freq = 39.20                # sets the frequency to 39.20 MHz
-    >>> vrg.autotune()                  # asks the vrg to find the optimal frequency for minimum reflected power
-    >>> vrg.power                       # reads the current power setting (e.g. 500 W)
-    >>> vrg.power = 300                 # sets the power output to 300 W
-    >>> vrg.is_enabled                  # reads the state of the enable switch on the front panel (True[Up/On] or False[Down/Off])
-    >>> vrg.is_interlocked              # reads the state of the interlock circuit (True[interlocked] or False[interlock satisfied])
-    >>> vrg.is_output_enabled           # reads the state of the software's output enabled signal (True if enabled, False if not)
-    >>> vrg.is_output_enabled = True    # enables RF power output
-    >>> vrg.is_output_enabled = False   # disables the RF power output
+    >>> vrg = VRG('COM1')               # Connects to the VRG on COM1.
+    >>> vrg.ping()                      # Returns "WAZOO!" (used to safely verify communication with VRG).
+    >>> vrg.set_abs_mode()              # Sets the power delivery mode to absorbed mode (preferred).
+    >>> vrg.freq                        # Reads the current frequency setting (e.g. 38.45 MHz).
+    >>> vrg.freq = 39.20                # Sets the frequency to 39.20 MHz.
+    >>> vrg.autotune()                  # Asks the vrg to find the optimal frequency for minimum reflected power.
+    >>> vrg.power                       # Reads the current power setting (e.g. 500 W).
+    >>> vrg.power = 300                 # Sets the power output to 300 W.
+    >>> vrg.is_enabled                  # Reads the state of the enable switch on the front panel (True[Up/On] or False[Down/Off]).
+    >>> vrg.is_interlocked              # Reads the state of the interlock circuit (True[interlocked] or False[interlock satisfied]).
+    >>> vrg.is_output_enabled           # Reads the state of the software's output enabled signal (True if enabled, False if not).
+    >>> vrg.is_output_enabled = True    # Enables RF power output.
+    >>> vrg.fwd_power                   # Reads the forward power delivered to the load.
+    >>> vrg.rfl_power                   # Reads the power reflected by the load.
+    >>> vrg.abs_power                   # Reads the power absorbed by the load (forward minus reflected power).
+    >>> vrg.is_output_enabled = False   # Disables the RF power output.
     """
 
     def __init__(
