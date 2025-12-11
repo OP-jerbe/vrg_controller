@@ -9,8 +9,8 @@ class VRG:
     Class that implements the driver for the Variable Frequency RF Generator (VRG),
     Args:
         port (str | None): The COM port where the VRG is connected. Default is None.
-        freq_range (tuple(float | float)): The operating frequency range in MHz. Default is (25, 42). Set in hardware at factory.
-        max_power (int): The maximum power output in watts. Default is 800. Set in hardware at factory.
+        freq_range (tuple(float | float)): The operating frequency range in MHz. Default is (25, 42). Set in firmware at factory.
+        max_power (int): The maximum power output in watts. Default is 800. Set in firmware at factory.
 
     ***Example usage:***
     >>> vrg = VRG('COM1')               # connects to the VRG on COM1
