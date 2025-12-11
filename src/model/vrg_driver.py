@@ -4,6 +4,8 @@ vrg_driver.py
 Description: This driver contains the VRG class which can control the
              Oregon Physics variable frequency RF generator.
 
+Built with Python version 3.13.3
+
 Author: Joshua Erbe
 Company: Oregon Physics, LLC.
 Version 1.0.0
