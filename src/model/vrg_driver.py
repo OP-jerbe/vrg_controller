@@ -12,7 +12,7 @@ class VRG:
         freq_range (tuple(float | float)): The operating frequency range in MHz. Default is (25, 42). Set in hardware at factory.
         max_power (int): The maximum power output in watts. Default is 800. Set in hardware at factory.
 
-    Example usage:
+    ***Example usage:***
     >>> vrg = VRG('COM1')               # connects to the VRG on COM1
     >>> vrg.ping()                      # returns "WAZOO!" (used to safely verify communication with VRG)
     >>> vrg.set_abs_mode()              # sets the power delivery mode to absorbed mode (preferred)
@@ -257,7 +257,7 @@ class VRG:
         """
         status = self.status_byte
         # Third from the last char is the enable switch I/O bit.
-        enable_bit: str = bin(status)[-3]
+        enable_bit: str = bin(status)[-3]  # convert to binary string
         return enable_bit == '1'
 
     @property
@@ -270,7 +270,7 @@ class VRG:
         """
         status = self.status_byte
         # second from the last char is the overtemp bit
-        overtemp_bit: str = bin(status)[-2]
+        overtemp_bit: str = bin(status)[-2]  # convert to binary string
         return overtemp_bit == '1'
 
     @property
@@ -283,7 +283,7 @@ class VRG:
         """
         status = self.status_byte
         # Last char is the interlock bit.
-        interlock_bit: str = bin(status)[-1]
+        interlock_bit: str = bin(status)[-1]  # convert to binary string
         return interlock_bit == '1'
 
     # --- Software RF output enabled setting ---
@@ -299,7 +299,7 @@ class VRG:
         # The second item in the status list is the status byte.
         status_byte = int(self.status[1])
         # The last char is the software enabled bit.
-        enable_bit: str = bin(status_byte)[-1]
+        enable_bit: str = bin(status_byte)[-1]  # convert to binary string
         return enable_bit == '1'
 
     @is_output_enabled.setter
