@@ -271,9 +271,9 @@ class VRG:
         Returns:
             bool: True if the enable switch is in the 'up' (ON) position, False if in the 'down' (OFF) position.
         """
-        status = self.status_byte
+        status_int = self.status_byte
         # Third from the last char is the enable switch I/O bit.
-        enable_bit: str = bin(status)[-3]  # convert to binary string
+        enable_bit: str = bin(status_int)[-3]  # convert to binary string
         return enable_bit == '1'
 
     @property
@@ -284,9 +284,9 @@ class VRG:
         Returns:
             bool: True if the VRG is currently reporting an overtemperature condition, False otherwise.
         """
-        status = self.status_byte
+        status_int = self.status_byte
         # second from the last char is the overtemp bit
-        overtemp_bit: str = bin(status)[-2]  # convert to binary string
+        overtemp_bit: str = bin(status_int)[-2]  # convert to binary string
         return overtemp_bit == '1'
 
     @property
@@ -297,9 +297,9 @@ class VRG:
         Returns:
             bool: True if the safety interlock is open (circuit interrupted), False if the interlock is closed (safe).
         """
-        status = self.status_byte
+        status_int = self.status_byte
         # Last char is the interlock bit.
-        interlock_bit: str = bin(status)[-1]  # convert to binary string
+        interlock_bit: str = bin(status_int)[-1]  # convert to binary string
         return interlock_bit == '1'
 
     @property
@@ -311,9 +311,9 @@ class VRG:
             bool: True if the VRG is currently reporting an overcurrent condition, False otherwise.
         """
         # The second item in the status list is the status byte.
-        status_byte = int(self.status[1])
+        status_int = int(self.status[1])
         # The fourth from the last char is the overcurrent I/O bit.
-        overcurrent_bit: str = bin(status_byte)[-4]  # convert to binary string
+        overcurrent_bit: str = bin(status_int)[-4]  # convert to binary string
         return overcurrent_bit == '1'
 
     # --- Software RF output enabled setting ---
@@ -327,9 +327,9 @@ class VRG:
             bool: True if the software output is enabled, False otherwise.
         """
         # The second item in the status list is the status byte.
-        status_byte = int(self.status[1])
+        status_int = int(self.status[1])
         # The last char is the software enabled bit.
-        enable_bit: str = bin(status_byte)[-1]  # convert to binary string
+        enable_bit: str = bin(status_int)[-1]  # convert to binary string
         return enable_bit == '1'
 
     @is_output_enabled.setter
