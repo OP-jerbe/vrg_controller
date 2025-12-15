@@ -302,6 +302,20 @@ class VRG:
         interlock_bit: str = bin(status)[-1]  # convert to binary string
         return interlock_bit == '1'
 
+    @property
+    def is_overcurrent(self) -> bool:
+        """
+        GETTER: Reads the internal overcurrent protection status of the VRG.
+
+        Returns:
+            bool: True if the VRG is currently reporting an overcurrent condition, False otherwise.
+        """
+        # The second item in the status list is the status byte.
+        status_byte = int(self.status[1])
+        # The fourth from the last char is the overcurrent I/O bit.
+        overcurrent_bit: str = bin(status_byte)[-4]  # convert to binary string
+        return overcurrent_bit == '1'
+
     # --- Software RF output enabled setting ---
 
     @property
