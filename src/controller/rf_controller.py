@@ -181,7 +181,6 @@ class RFController(QObject):
         """
         Try to connect to the RF generator.
         """
-        print('Connect clicked')
         # Get ini info
         rf_com_port: str | None = get_ini_info()[0]
 
