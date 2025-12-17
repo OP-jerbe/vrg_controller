@@ -758,7 +758,7 @@ class VRG:
         """
         # Dividing by zero is not allowed.
         if int(self.main_power) == 0:
-            return 0
+            return 0.0
         eff = self.fwd_power / self.main_power
         return round(eff, 3)
 
