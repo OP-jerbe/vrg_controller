@@ -319,7 +319,7 @@ class VRG:
     # --- Software RF output enabled setting ---
 
     @property
-    def is_output_enabled(self) -> bool:
+    def output_enabled(self) -> bool:
         """
         GETTER: Reads the software RF output enabled state.
 
@@ -332,8 +332,8 @@ class VRG:
         enable_bit: str = bin(status_int)[-1]  # convert to binary string
         return enable_bit == '1'
 
-    @is_output_enabled.setter
-    def is_output_enabled(self, enable: bool) -> None:
+    @output_enabled.setter
+    def output_enabled(self, enable: bool) -> None:
         """
         SETTER: Writes the enable state in the software to allow or disallow RF output.
 
@@ -635,10 +635,3 @@ class VRG:
         status = [float(item) for item in status]
         status[1] = int(status[1])
         return status
-
-
-"""
-
-
-
-"""

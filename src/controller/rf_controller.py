@@ -131,7 +131,7 @@ class RFController(QObject):
         """
         try:
             self.model.disable_echo()  # send "DE" to VRG
-            self.model.is_output_enabled = False  # send "DR" to VRG
+            self.model.output_enabled = False  # send "DR" to VRG
             self.model.set_abs_mode()  # send "PM1" to VRG
         except Exception as e:
             print(f'    Unexpected Error initializing GUI display: {e}')
@@ -221,10 +221,10 @@ class RFController(QObject):
         print('RF Enable button clicked.')
         try:
             if self.view.enable_rf_btn.isChecked():
-                self.model.is_output_enabled = True
+                self.model.output_enabled = True
                 self.view.enable_rf_btn.setText('RF On')
             else:
-                self.model.is_output_enabled = False
+                self.model.output_enabled = False
                 self.view.enable_rf_btn.setText('RF Off')
         except Exception as e:
             print(f'    Error enabling/disabling RF: {e}')
