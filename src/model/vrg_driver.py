@@ -713,23 +713,23 @@ class VRG:
         return self.status[3]
 
     @property
-    def mains_voltage(self) -> float:
+    def main_voltage(self) -> float:
         """
-        GETTER: Reads the mains input voltage.
+        GETTER: Reads the voltage used in the RF circuit.
 
         Returns:
-            float: The measured mains voltage in volts.
+            float: The measured RF voltage in RMS volts.
         """
         # The fifth number in status is the mains voltage measurement.
         return self.status[4]
 
     @property
-    def mains_current(self) -> float:
+    def main_current(self) -> float:
         """
-        GETTER: Reads the mains current draw.
+        GETTER: Reads the current draw in the RF circuit.
 
         Returns:
-            float: The measured mains current draw in amperes.
+            float: The measured current draw in the RF circuit.
         """
         # The sixth number in status is the mains voltage measurement.
         return self.status[5]
