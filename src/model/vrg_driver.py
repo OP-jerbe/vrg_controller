@@ -754,6 +754,8 @@ class VRG:
         Returns:
             float: The calculated efficiency of the RF circuit.
         """
+        if int(self.main_power) == 0:
+            return 0
         return self.fwd_power / self.main_power
 
     @property
