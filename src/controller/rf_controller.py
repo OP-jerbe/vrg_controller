@@ -187,7 +187,7 @@ class RFController(QObject):
 
         # Connect to the RF generator
         if rf_com_port is not None:
-            self.model.serial_port = self.model.open_connection(rf_com_port)
+            self.model.open_connection(rf_com_port)
         if self.model.serial_port:
             self.model.flush_input_buffer()
             self._init_control()

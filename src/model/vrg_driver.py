@@ -153,10 +153,9 @@ class VRG:
             .strip()
         )
 
-    @staticmethod
     def open_connection(
-        port: str, baudrate: int = 9600, timeout: float = 1.0
-    ) -> serial.Serial | None:
+        self, port: str, baudrate: int = 9600, timeout: float = 1.0
+    ) -> None:
         """
         Establishes a serial connection to the instrument at the specified COM port.
 
@@ -165,13 +164,9 @@ class VRG:
                 The port name is automatically converted to uppercase.
             baudrate (int): The serial communication baud rate in bits per second. Defaults to 9600.
             timeout (float): The read and write timeout in seconds. Defaults to 1.0.
-
-        Returns:
-            serial.Serial | None: The active `serial.Serial` object if the connection is successful,
-                or None if the connection attempt failed.
         """
         try:
-            return serial.Serial(
+            self.serial_port = serial.Serial(
                 port=port.upper(),
                 baudrate=baudrate,
                 timeout=timeout,
@@ -180,7 +175,7 @@ class VRG:
 
         except Exception as e:
             print(f'Failed to make a serial connection to {port}.\n\n{str(e)}')
-            return None
+            self.serial_port = None
 
     def flush_input_buffer(self) -> None:
         """
