@@ -622,7 +622,7 @@ class VRG:
         for the specific bit definitions of this status byte.
 
         Returns:
-            list[int | float]: A list of mixed integer and float values representing the
+            list (int | float): A list of mixed integer and float values representing the
                 current state of the instrument's operational parameters.
         """
         command = 'RT'
