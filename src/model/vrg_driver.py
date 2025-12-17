@@ -390,7 +390,8 @@ class VRG:
         """
         command = 'RQ'
         response = self._send_query(command).replace(command, '').strip()
-        return float(response) * 1e-3
+        freq = float(response) * 1e-3
+        return round(freq, 2)
 
     @freq.setter
     def freq(self, value: float) -> None:
