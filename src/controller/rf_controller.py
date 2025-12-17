@@ -197,7 +197,6 @@ class RFController(QObject):
         """
         Set the power mode to Absorbed.
         """
-        print('Absorbed Mode clicked.')
         try:
             self.model.set_abs_mode()
         except Exception as e:
@@ -207,7 +206,6 @@ class RFController(QObject):
         """
         Set the power mode to Forward
         """
-        print('Forward Mode clicked.')
         try:
             self.model.set_fwd_mode()
         except Exception as e:
@@ -217,7 +215,6 @@ class RFController(QObject):
         """
         Turn on the RF if clicked. Turn off the RF if unclicked.
         """
-        print('RF Enable button clicked.')
         try:
             if self.view.enable_rf_btn.isChecked():
                 self.model.output_enabled = True
