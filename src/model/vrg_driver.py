@@ -696,7 +696,7 @@ class VRG:
         GETTER: Reads the 5-volt voltage.
 
         Returns:
-            float: The measured 5-volt voltage.
+            float: The measured 5-volt voltage in volts.
         """
         # The third number in status is the 5-volt voltage measurement.
         return self.status[2]
@@ -707,7 +707,7 @@ class VRG:
         GETTER: Reads the 12-volt voltage.
 
         Returns:
-            float: The measured 12-volt voltage.
+            float: The measured 12-volt voltage in volts.
         """
         # The fouth number in status is the 12-volt voltage measurement.
         return self.status[3]
@@ -718,7 +718,7 @@ class VRG:
         GETTER: Reads the mains input voltage.
 
         Returns:
-            float: The measured mains voltage.
+            float: The measured mains voltage in volts.
         """
         # The fifth number in status is the mains voltage measurement.
         return self.status[4]
@@ -729,7 +729,7 @@ class VRG:
         GETTER: Reads the mains current draw.
 
         Returns:
-            float: The measured mains current draw.
+            float: The measured mains current draw in amperes.
         """
         # The sixth number in status is the mains voltage measurement.
         return self.status[5]
@@ -740,7 +740,7 @@ class VRG:
         GETTER: Reads the op-amp temperature.
 
         Returns:
-            float: The measured temperature of the op-amp.
+            float: The measured temperature of the op-amp in degrees C.
         """
         # The seventh number in status is the amp temperature.
         return self.status[6]
@@ -751,7 +751,7 @@ class VRG:
         GETTER: Reads the temperature of the main circuit board.
 
         Returns:
-            float: The measured temperature of the main circuit board.
+            float: The measured temperature of the main circuit board in degrees C.
         """
         # The eighth number in status is the board temperature.
         return self.status[7]
