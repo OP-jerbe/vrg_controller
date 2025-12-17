@@ -566,6 +566,54 @@ class VRG:
         return self._send_query(command).replace(command, '').strip()
 
     @property
+    def serial_number(self) -> int:
+        """
+        GETTER: Reads the unit's serial number.
+
+        Returns:
+            int: The serial number of the connected VRG.
+        """
+        # The first number in factroy info is the serial number
+        serial_number = self.factory_info.split(' ')[0]
+        return int(serial_number)
+
+    @property
+    def reboots(self) -> int:
+        """
+        GETTER: Reads the number of times the unit has been rebooted.
+
+        Returns:
+            int: The number of reboots.
+        """
+        # The second number in factory info is the number of reboots.
+        reboots = self.factory_info.split(' ')[1]
+        return int(reboots)
+
+    @property
+    def operating_hrs(self) -> int:
+        """
+        GETTER: Reads the number of hours the unit has been powered on.
+
+        Returns:
+            int: The number of hours the unit has been powered on.
+        """
+        # The third number in factory info is the operating hours.
+        hours = self.factory_info.split(' ')[2]
+        return int(hours)
+
+    @property
+    def enabled_hrs(self) -> int:
+        """
+        GETTER: Reads the number of hours that RF output has been enabled.
+
+        Returns:
+            int: The number of hours that RF output has been enabled.
+        """
+        # The fourth number in factory info is the number of enabled hours.
+        hours = self.factory_info.split(' ')[3]
+        return int(hours)
+
+    @property
     def status_byte(self) -> int:
         """
         GETTER: Reads the raw status byte from the VRG.
@@ -630,3 +678,80 @@ class VRG:
         status = [float(item) for item in status]
         status[1] = int(status[1])
         return status
+
+    @property
+    def version(self) -> float:
+        """
+        GETTER: Reads the installed firmware version number.
+
+        Returns:
+            float: Firmware version number
+        """
+        # The first number in status is the firmware version.
+        return self.status[0]
+
+    @property
+    def v5(self) -> float:
+        """
+        GETTER: Reads the 5-volt voltage.
+
+        Returns:
+            float: The measured 5-volt voltage.
+        """
+        # The third number in status is the 5-volt voltage measurement.
+        return self.status[2]
+
+    @property
+    def v12(self) -> float:
+        """
+        GETTER: Reads the 12-volt voltage.
+
+        Returns:
+            float: The measured 12-volt voltage.
+        """
+        # The fouth number in status is the 12-volt voltage measurement.
+        return self.status[3]
+
+    @property
+    def mains_voltage(self) -> float:
+        """
+        GETTER: Reads the mains input voltage.
+
+        Returns:
+            float: The measured mains voltage.
+        """
+        # The fifth number in status is the mains voltage measurement.
+        return self.status[4]
+
+    @property
+    def mains_current(self) -> float:
+        """
+        GETTER: Reads the mains current draw.
+
+        Returns:
+            float: The measured mains current draw.
+        """
+        # The sixth number in status is the mains voltage measurement.
+        return self.status[5]
+
+    @property
+    def amp_temp(self) -> float:
+        """
+        GETTER: Reads the op-amp temperature.
+
+        Returns:
+            float: The measured temperature of the op-amp.
+        """
+        # The seventh number in status is the amp temperature.
+        return self.status[6]
+
+    @property
+    def board_temp(self) -> float:
+        """
+        GETTER: Reads the temperature of the main circuit board.
+
+        Returns:
+            float: The measured temperature of the main circuit board.
+        """
+        # The eighth number in status is the board temperature.
+        return self.status[7]
