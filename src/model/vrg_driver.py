@@ -749,6 +749,7 @@ class VRG:
     def eff(self) -> float:
         """
         Calculates the efficiency of the RF circuit.
+        efficiency = fwd_power / main_power
 
         Returns:
             float: The calculated efficiency of the RF circuit.
