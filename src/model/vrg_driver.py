@@ -398,7 +398,7 @@ class VRG:
         return float(response) * 1e-3
 
     @freq.setter
-    def freq(self, value: int | float) -> None:
+    def freq(self, value: float) -> None:
         """
         SETTER: Sets the desired output frequency of the VRG.
 
@@ -436,7 +436,7 @@ class VRG:
         return self._min_freq
 
     @min_freq.setter
-    def min_freq(self, value: int | float) -> None:
+    def min_freq(self, value: float) -> None:
         """
         SETTER: Sets the minimum allowable output frequency within the VRG's hard frequency limits.
 
@@ -478,7 +478,7 @@ class VRG:
         return self._max_freq
 
     @max_freq.setter
-    def max_freq(self, value: int | float) -> None:
+    def max_freq(self, value: float) -> None:
         """
         SETTER: Sets the maximum allowable output frequency within the VRG's hard frequency limits.
 
