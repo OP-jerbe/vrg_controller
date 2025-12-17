@@ -341,6 +341,8 @@ class VRG:
             enable (bool): Boolean state to set the software RF output control.
                 True enables the output ('ER' command); False disables it ('DR' command).
         """
+        if not isinstance(enable, bool):
+            raise TypeError(f'Expected bool but got {type(enable).__name__}.')
         if enable:
             command = 'ER'
         else:
@@ -371,7 +373,7 @@ class VRG:
                 the maximum configured power (`self._max_power`).
         """
         if not isinstance(value, int):
-            raise TypeError(f'Expected an int, but got {type(value).__name__}')
+            raise TypeError(f'Expected int, but got {type(value).__name__}')
 
         if not (0 <= value <= self._max_power):
             raise ValueError(
