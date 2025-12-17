@@ -743,7 +743,8 @@ class VRG:
         Returns:
             float: The calculated power draw in watts.
         """
-        return self.main_voltage * self.main_current
+        power = self.main_voltage * self.main_current
+        return round(power, 1)
 
     @property
     def eff(self) -> float:
@@ -754,9 +755,11 @@ class VRG:
         Returns:
             float: The calculated efficiency of the RF circuit.
         """
+        # Dividing by zero is not allowed.
         if int(self.main_power) == 0:
             return 0
-        return self.fwd_power / self.main_power
+        eff = self.fwd_power / self.main_power
+        return round(eff, 3)
 
     @property
     def amp_temp(self) -> float:
