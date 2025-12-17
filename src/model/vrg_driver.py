@@ -735,6 +735,27 @@ class VRG:
         return self.status[5]
 
     @property
+    def main_power(self) -> float:
+        """
+        Calculates the power draw from the RF circuit.
+        main_power = main_voltage * main_current
+
+        Returns:
+            float: The calculated power draw in watts.
+        """
+        return self.main_voltage * self.main_current
+
+    @property
+    def eff(self) -> float:
+        """
+        Calculates the efficiency of the RF circuit.
+
+        Returns:
+            float: The calculated efficiency of the RF circuit.
+        """
+        return self.fwd_power / self.main_power
+
+    @property
     def amp_temp(self) -> float:
         """
         GETTER: Reads the op-amp temperature.
